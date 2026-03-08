@@ -27,11 +27,13 @@
 **SplitMate** allows users to:
 
 - Create expense groups and invite friends via a 4-digit code
-- Add, edit, and delete expenses with optional categories
+- Add, edit, and delete expenses with optional categories and custom date selection
 - Automatically calculate who owes whom with a minimal-transaction settlement algorithm
 - View activity history for full audit trail
 - Share read-only expense summaries via a public link (code + password protected)
 - Export expense reports as PDF
+- Create and manage budgets (personal or group) with income tracking, spending caps, and budget-specific PDF exports
+- Filter, search, and sort budgets with date range filtering
 
 ---
 
@@ -64,7 +66,8 @@
 │  │              PostgreSQL Database                 │   │
 │  │                                                  │   │
 │  │  expense_groups │ group_members │ expenses       │   │
-│  │  activity_log   │ profiles                       │   │
+│  │  activity_log   │ profiles     │ settlements     │   │
+│  │  budgets        │ income_entries                 │   │
 │  └──────────────────────────────────────────────────┘   │
 │                                                         │
 │  ┌──────────────────────────────────────────────────┐   │
@@ -87,6 +90,7 @@
 | **Routing** | React Router v6 |
 | **Backend** | Supabase (PostgreSQL + Auth + Edge Functions) |
 | **PDF Export** | jsPDF + jspdf-autotable |
+| **Charts** | Recharts |
 | **Edge Functions** | Deno (TypeScript), deployed on Supabase |
 
 ---
@@ -119,22 +123,37 @@
                            │ created_at           │
                            └──────────┬───────────┘
                                       │
-                          ┌───────────┴───────────┐
-                          │                       │
-                          ▼                       ▼
-               ┌──────────────────┐    ┌──────────────────┐
-               │    expenses      │    │   activity_log   │
-               ├──────────────────┤    ├──────────────────┤
-               │ id (PK, uuid)    │    │ id (PK, uuid)    │
-               │ group_id (FK)    │    │ group_id (FK)    │
-               │ paid_by (FK →    │    │ member_id (FK)   │
-               │   group_members) │    │ action           │
-               │ amount (numeric) │    │ details          │
-               │ description      │    │ created_at       │
-               │ split_among[]    │    └──────────────────┘
-               │ category         │
+                          ┌───────────┼───────────────────┐
+                          │           │                   │
+                          ▼           ▼                   ▼
+               ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
+               │    expenses      │ │   activity_log   │ │   settlements    │
+               ├──────────────────┤ ├──────────────────┤ ├──────────────────┤
+               │ id (PK, uuid)    │ │ id (PK, uuid)    │ │ id (PK, uuid)    │
+               │ group_id (FK)    │ │ group_id (FK)    │ │ group_id (FK)    │
+               │ paid_by (FK →    │ │ member_id (FK)   │ │ from_member_id   │
+               │   group_members) │ │ action           │ │ to_member_id     │
+               │ amount (numeric) │ │ details          │ │ amount           │
+               │ description      │ │ created_at       │ │ settled_by (FK)  │
+               │ split_among[]    │ └──────────────────┘ │ created_at       │
+               │ category         │                      └──────────────────┘
                │ created_at       │
                │ updated_at       │
+               └──────────────────┘
+
+               ┌──────────────────┐       ┌──────────────────┐
+               │    budgets       │       │  income_entries  │
+               ├──────────────────┤       ├──────────────────┤
+               │ id (PK, uuid)    │  1:N  │ id (PK, uuid)    │
+               │ group_id (FK)    │◄──────│ budget_id (FK)   │
+               │ created_by (FK)  │       │ added_by (FK)    │
+               │ name             │       │ description      │
+               │ type             │       │ amount           │
+               │ budget_limit     │       │ created_at       │
+               │ member_ids[]     │       └──────────────────┘
+               │ linked_expense_  │
+               │   ids[]          │
+               │ created_at       │
                └──────────────────┘
 ```
 
@@ -184,7 +203,7 @@ Each expense records who paid, how much, and who it's split among.
 | `description` | text | What the expense was for |
 | `split_among` | uuid[] | Array of member IDs to split among (empty = all) |
 | `category` | text (nullable) | Category tag (food, transport, etc.) |
-| `created_at` | timestamptz | Auto-set |
+| `created_at` | timestamptz | User-selectable date (defaults to current) |
 | `updated_at` | timestamptz | Auto-updated via trigger |
 
 #### `activity_log`
@@ -205,6 +224,46 @@ Immutable audit trail for all group actions.
 - `EXPENSE_ADDED` / `EXPENSE_CREATED` — Expense was added
 - `EXPENSE_UPDATED` — Expense was edited
 - `EXPENSE_DELETED` — Expense was removed
+
+#### `settlements`
+Records settled payments between members.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid (PK) | Auto-generated |
+| `group_id` | uuid (FK) | References `expense_groups.id` |
+| `from_member_id` | uuid (FK) | Member who pays |
+| `to_member_id` | uuid (FK) | Member who receives |
+| `amount` | numeric | Settlement amount |
+| `settled_by` | uuid (FK) | Member who recorded the settlement |
+| `created_at` | timestamptz | Auto-set |
+
+#### `budgets`
+Budget containers that can be personal or group-wide, with optional spending caps.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid (PK) | Auto-generated |
+| `group_id` | uuid (FK) | References `expense_groups.id` |
+| `created_by` | uuid (FK) | References `group_members.id` |
+| `name` | text | Budget name |
+| `type` | text | `personal` or `group` |
+| `budget_limit` | numeric (nullable) | Optional spending cap |
+| `member_ids` | uuid[] | Members tracked by this budget |
+| `linked_expense_ids` | uuid[] | Manually linked expense IDs |
+| `created_at` | timestamptz | User-selectable date |
+
+#### `income_entries`
+Income records linked to budgets.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid (PK) | Auto-generated |
+| `budget_id` | uuid (FK) | References `budgets.id` |
+| `added_by` | uuid (FK) | References `group_members.id` |
+| `description` | text | Income description |
+| `amount` | numeric | Income amount |
+| `created_at` | timestamptz | User-selectable date |
 
 ---
 
@@ -242,22 +301,22 @@ Immutable audit trail for all group actions.
 │          GroupDashboard                  │
 │                                          │
 │  Header: Group name, code, user info     │
-│  Stats:  Total | Expenses | Members      │
+│  Nav:    Icon tabs (top, below navbar)   │
+│  Stats:  Total | Members (hidden in      │
+│          budget view)                    │
 │                                          │
-│  ┌──────────┬─────────┬────────────┐     │
-│  │ Expenses │  Split  │  History   │     │
-│  │  Tab     │  Tab    │   Tab      │     │
-│  ├──────────┼─────────┼────────────┤     │
-│  │ List of  │ Balance │ Activity   │     │
-│  │ expenses │ per     │ log with   │     │
-│  │ with     │ member  │ timestamps │     │
-│  │ edit/    │         │            │     │
-│  │ delete   │ Who     │            │     │
-│  │          │ pays    │            │     │
-│  │ Add new  │ whom    │            │     │
-│  │ expense  │ (min    │            │     │
-│  │ button   │ txns)   │            │     │
-│  └──────────┴─────────┴────────────┘     │
+│  ┌────────┬────────┬────────┬─────────┐  │
+│  │Expenses│ Split  │History │ Budget  │  │
+│  │  Tab   │  Tab   │  Tab   │  Tab    │  │
+│  ├────────┼────────┼────────┼─────────┤  │
+│  │ List   │Balance │Activity│ Budget  │  │
+│  │ with   │per     │log     │ mgmt    │  │
+│  │ edit/  │member  │with    │ income  │  │
+│  │ delete │        │time-   │ expense │  │
+│  │        │Who     │stamps  │ linking │  │
+│  │ Add    │pays    │        │ PDF     │  │
+│  │ new    │whom    │        │ export  │  │
+│  └────────┴────────┴────────┴─────────┘  │
 │                                          │
 │  Actions: Add Expense | Export PDF       │
 │           Share Settings | Manage Members│
@@ -310,6 +369,7 @@ Immutable audit trail for all group actions.
 │                                      │
 │  Description:  [optional text]       │
 │  Amount (₹):   [required number]     │
+│  Date:         [calendar picker]     │
 │  Category:     [dropdown, optional]  │
 │  Paid by:      [dropdown - members]  │
 │  Split among:  [checkbox list]       │
@@ -362,12 +422,20 @@ App
 │   │
 │   └── GroupDashboard (when group is active)
 │       ├── Header (group name, code, actions)
-│       ├── Stats Cards (total, count, members)
-│       ├── Tabs
+│       ├── Icon Navigation Bar (top, below header)
+│       ├── Stats Cards (hidden in budget view)
+│       ├── Sections (icon-driven navigation)
 │       │   ├── ExpenseList
+│       │   │   └── ExpenseFilters (search, sort, filter)
 │       │   ├── SettlementView
-│       │   └── ActivityHistory
-│       ├── AddExpenseDialog
+│       │   ├── ActivityHistory
+│       │   ├── BudgetView
+│       │   │   ├── Consolidated Filter Popover (search, type, member, date range, sort)
+│       │   │   ├── CreateBudgetDialog
+│       │   │   ├── AddIncomeDialog
+│       │   │   └── Budget PDF Export
+│       │   └── ExpenseCharts
+│       ├── AddExpenseDialog (with date picker)
 │       ├── ShareSettings (dialog)
 │       └── MemberManagement (dialog, creator only)
 │
@@ -390,7 +458,7 @@ App
 | File | Purpose |
 |------|---------|
 | `src/lib/splitCalculator.ts` | Balance calculation & greedy settlement algorithm |
-| `src/lib/pdfExport.ts` | Generates PDF reports with expenses, balances, settlements |
+| `src/lib/pdfExport.ts` | Generates PDF reports for expenses and budgets |
 | `src/lib/categories.ts` | Expense category definitions with emoji icons |
 
 ---
@@ -469,15 +537,17 @@ Content-Type: application/json
 - **Close Group** (creator only): Cascading delete of all expenses, activity logs, members, then group
 
 ### 2. Expense Management
-- **Add Expense**: Description (optional), amount (required), category (optional), paid by (select member), split among (checkbox list)
-- **Edit Expense**: Full in-place editing with pre-populated form
+- **Add Expense**: Description (optional), amount (required), date (calendar picker, defaults to today), category (optional), paid by (select member), split among (checkbox list)
+- **Edit Expense**: Full in-place editing with pre-populated form including date
 - **Delete Expense**: With confirmation, logs action
 - **Category Support**: 8 predefined categories — Food, Transport, Accommodation, Entertainment, Shopping, Utilities, Health, Other
+- **Date Selection**: Users can select past or future dates when adding/editing expenses via an integrated calendar picker
 
 ### 3. Split & Settlement
 - **Real-time Balances**: Each member's total paid vs total owed
 - **Greedy Settlement Algorithm**: Minimizes the number of transactions needed to settle all debts
 - **Visual Indicators**: Green for creditors (owed money), red for debtors (owes money)
+- **Record Settlements**: Track actual payments made between members
 
 ### 4. Activity History
 - Immutable audit trail of all group actions
@@ -492,16 +562,38 @@ Content-Type: application/json
 - Accessible without authentication
 
 ### 6. PDF Export
-- Generates a multi-section PDF report:
-  - **Section 1**: Expense table (description, amount, paid by, split among, date)
-  - **Section 2**: Member balances (paid, owed, net balance)
-  - **Section 3**: Settlement instructions (who pays whom, how much)
+- **Expense PDF**: Multi-section report with expense table, member balances, and settlement instructions
+- **Budget PDF**: Budget summary, income entries, linked expenses with totals and remaining balance
 - Available in both authenticated dashboard and shared view
 
 ### 7. Member Management (Creator Only)
 - **Rename Members**: Edit any member's display name
 - **Remove Members**: Removes member and all their expenses (with confirmation)
 - Creator cannot remove themselves
+
+### 8. Budgeting System
+- **Personal Budgets**: Track only your own expenses
+- **Group Budgets**: Track selected members' expenses collectively
+- **Income Tracking**: Add income entries with description, amount, and custom date
+- **Budget Caps**: Optional spending limits with visual progress bar and 80% usage alerts
+- **Expense Linking**: Manually link group expenses to budgets or auto-track by member
+- **Combined View**: Merged chronological list of income and expenses for unified tracking
+- **Date Selection**: Custom date picker for budgets and income entries
+- **Budget PDF Export**: Dedicated budget reports with summary, income entries, and linked expenses
+
+### 9. Budget Filtering & Search
+- **Consolidated Filter UI**: All filters (search, type, member, sort, date range, view mode) accessible via a single icon popover
+- **Date Range Filtering**: Filter transactions between specific dates; selecting same from/to date shows all transactions for that day
+- **Active Filter Badge**: Visual indicator showing the count of active filters
+- **Responsive Design**: Filter popover works seamlessly on both mobile and desktop
+
+### 10. Expense Charts
+- Visual analytics with charts showing spending patterns
+- Category-wise breakdown of expenses
+
+### 11. Dashboard Navigation
+- **Icon-based Navigation**: Compact icon tabs positioned above content cards for quick section switching
+- **Smart Layout**: Summary cards auto-hide when Budget section is active for maximum screen utilization
 
 ---
 
@@ -900,6 +992,9 @@ All tables have **Row-Level Security (RLS)** enabled with the following policies
 | `expenses` | SELECT/INSERT/UPDATE/DELETE | All authenticated users |
 | `activity_log` | SELECT/INSERT | All authenticated users |
 | `activity_log` | UPDATE/DELETE | Not allowed |
+| `budgets` | SELECT/INSERT/UPDATE/DELETE | All authenticated users |
+| `income_entries` | SELECT/INSERT/UPDATE/DELETE | All authenticated users |
+| `settlements` | SELECT/INSERT | All authenticated users |
 
 ### Database Triggers
 
@@ -952,20 +1047,30 @@ Subscribe to `expenses` and `group_members` tables filtered by `group_id`.
 │   │   └── NotFound.tsx           # 404 page
 │   ├── components/
 │   │   ├── JoinGroup.tsx          # Group listing, creation, joining
-│   │   ├── GroupDashboard.tsx      # Main dashboard with tabs
+│   │   ├── GroupDashboard.tsx      # Main dashboard with icon navigation
 │   │   ├── ExpenseList.tsx        # Expense cards with edit/delete
-│   │   ├── AddExpenseDialog.tsx   # Create/edit expense modal
+│   │   ├── ExpenseFilters.tsx     # Search, sort, filter controls
+│   │   ├── ExpenseCharts.tsx      # Visual spending analytics
+│   │   ├── AddExpenseDialog.tsx   # Create/edit expense modal with date picker
 │   │   ├── SettlementView.tsx     # Balances & settlement display
 │   │   ├── ActivityHistory.tsx    # Activity log timeline
+│   │   ├── BudgetView.tsx         # Budget management with consolidated filters
+│   │   ├── CreateBudgetDialog.tsx # Create/edit budget modal with date picker
+│   │   ├── AddIncomeDialog.tsx    # Add/edit income modal with date picker
 │   │   ├── ShareSettings.tsx      # Sharing toggle & password
 │   │   ├── MemberManagement.tsx   # Rename/remove members
+│   │   ├── ProfileDropdown.tsx    # User profile menu
+│   │   ├── ThemeToggle.tsx        # Dark/light mode toggle
+│   │   ├── ThemeProvider.tsx      # Theme context provider
+│   │   ├── NavLink.tsx            # Navigation link component
+│   │   ├── Footer.tsx             # App footer
 │   │   └── ui/                    # shadcn/ui components
 │   ├── hooks/
 │   │   ├── useAuth.ts             # Authentication state management
 │   │   └── useGroupSession.ts     # Group session persistence
 │   ├── lib/
 │   │   ├── splitCalculator.ts     # Balance & settlement algorithms
-│   │   ├── pdfExport.ts           # PDF report generation
+│   │   ├── pdfExport.ts           # PDF report generation (expenses + budgets)
 │   │   ├── categories.ts          # Expense category definitions
 │   │   └── utils.ts               # Tailwind utility helpers
 │   └── integrations/supabase/
