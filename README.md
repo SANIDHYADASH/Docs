@@ -18,7 +18,7 @@
 			<td>MTP Report - IITJ</td>
 			<td>19 April 2026</td>
 			<td><a href="/">View</a></td>
-			<td><span style="color:yellow;font-weight:bold;">Upcoming</span></td>
+			<td><span style="color:red;font-weight:bold;">Upcoming</span></td>
 		</tr>
 		<tr>
 			<td>9</td>
