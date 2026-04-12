@@ -14,6 +14,13 @@
 	</thead>
 	<tbody>
 		<tr>
+			<td>9</td>
+			<td>MTP - IITJ</td>
+			<td>19 April 2026</td>
+			<td><a href="/project">View</a></td>
+			<td><span style="color:green;font-weight:bold;">Available</span></td>
+		</tr>
+		<tr>
 			<td>8</td>
 			<td>SplitMate V2 Release Notes</td>
 			<td>08 Mar 2026</td>
