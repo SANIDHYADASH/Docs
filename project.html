@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>M.Tech Project - Explainable ML Framework for Loan Delinquency Detection</title>
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: #0a0f1a; }
+
+/* Navigation */
+.slide-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 10px 20px; display: flex; align-items: center; gap: 10px;
+  overflow-x: auto; flex-wrap: nowrap;
+}
+.slide-nav a {
+  color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 500;
+  padding: 6px 14px; border-radius: 6px; white-space: nowrap;
+  border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s;
+}
+.slide-nav a:hover, .slide-nav a.active { color: #fff; background: rgba(59,130,246,0.2); border-color: #3b82f6; }
+
+/* Slide wrapper */
+.slide-wrapper {
+  padding: 80px 20px 40px; max-width: 1400px; margin: 0 auto;
+}
+.slide-section { margin-bottom: 60px; scroll-margin-top: 70px; }
+.slide-container {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  overflow: hidden; border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+/* ===== SLIDE 1: Title ===== */
+.s1 { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+.s1 .bg-pattern { position: absolute; top:0; left:0; width:100%; height:100%; opacity:0.1; background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px; }
+.s1 .shape { position: absolute; border-radius: 50%; opacity: 0.1; }
+.s1 .shape1 { width: 23%; height: 42%; background: #3b82f6; top: -14%; right: 0; }
+.s1 .shape2 { width: 15%; height: 28%; background: #10b981; bottom: 0; left: -4%; }
+.s1 .shape3 { width: 12%; height: 21%; background: #f59e0b; top: 50%; right: 5%; }
+.s1 .main { position: relative; z-index: 10; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding: 5% 6%; }
+.s1 .header { text-align: center; margin-bottom: 4%; }
+.s1 .title { font-family: 'Montserrat', sans-serif; font-size: clamp(20px, 3.5vw, 48px); font-weight: 700; color: #fff; line-height: 1.2; }
+.s1 .title-hl { background: linear-gradient(90deg, #3b82f6, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.s1 .title2 { font-family: 'Montserrat', sans-serif; font-size: clamp(16px, 2.5vw, 36px); font-weight: 700; color: #fff; margin-top: 1%; }
+.s1 .subtitle { font-size: clamp(12px, 1.8vw, 24px); color: #94a3b8; font-weight: 500; margin-top: 2%; }
+.s1 .grid { display: flex; justify-content: center; width: 85%; gap: 5%; margin-top: 2%; }
+.s1 .left, .s1 .right { flex: 1; display: flex; flex-direction: column; gap: 3%; }
+.s1 .right { border-left: 1px solid rgba(255,255,255,0.1); padding-left: 5%; }
+.s1 .info-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 4%; border: 1px solid rgba(255,255,255,0.08); }
+.s1 .info-label { font-size: clamp(9px, 1vw, 14px); color: #94a3b8; margin-bottom: 2%; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.s1 .info-value { font-size: clamp(12px, 1.5vw, 20px); color: #fff; font-weight: 600; }
+.s1 .student-info { display: flex; align-items: center; gap: 4%; }
+.s1 .avatar { width: clamp(36px, 5vw, 64px); height: clamp(36px, 5vw, 64px); flex-shrink: 0; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #10b981); display: flex; align-items: center; justify-content: center; color: #fff; font-size: clamp(14px, 1.8vw, 24px); font-weight: 700; }
+.s1 .student-name { font-size: clamp(14px, 1.6vw, 22px); font-weight: 600; color: #fff; }
+.s1 .student-id { font-size: clamp(10px, 1vw, 14px); color: #94a3b8; }
+.s1 .faculty-info { display: flex; align-items: center; gap: 3%; }
+.s1 .faculty-icon { width: clamp(30px, 3.5vw, 44px); height: clamp(30px, 3.5vw, 44px); flex-shrink: 0; border-radius: 50%; background: rgba(59,130,246,0.15); display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: clamp(12px, 1.4vw, 18px); }
+.s1 .faculty-name { font-size: clamp(12px, 1.4vw, 18px); color: #fff; font-weight: 600; }
+.s1 .faculty-label { font-size: clamp(8px, 0.9vw, 12px); color: #94a3b8; }
+.s1 .tech-icons { display: flex; gap: 3%; margin-top: 2%; }
+.s1 .tech-icon { width: clamp(30px, 3.5vw, 48px); height: clamp(30px, 3.5vw, 48px); background: rgba(255,255,255,0.05); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: clamp(12px, 1.5vw, 20px); border: 1px solid rgba(255,255,255,0.05); }
+.s1 .status-ind { display: flex; align-items: center; gap: 2%; margin-top: 2%; }
+.s1 .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.4); }
+.s1 .status-text { font-size: clamp(9px, 1vw, 13px); color: #10b981; font-weight: 500; }
+.s1 .bottom { display: flex; justify-content: center; gap: 8%; margin-top: auto; width: 100%; padding-top: 3%; }
+.s1 .stat { text-align: center; }
+.s1 .stat-val { font-size: clamp(18px, 2.5vw, 32px); font-weight: 700; color: #fff; }
+.s1 .stat-lbl { font-size: clamp(9px, 1vw, 13px); color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+
+/* ===== SLIDE 2: Problem Statement (light theme) ===== */
+.s2 { background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%); }
+.s2 .header { background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); color: #fff; padding: 3% 3.5%; display: flex; justify-content: space-between; align-items: center; }
+.s2 .slide-title { font-size: clamp(18px, 2.5vw, 32px); font-weight: 700; }
+.s2 .slide-sub { font-size: clamp(10px, 1.2vw, 16px); opacity: 0.9; margin-top: 0.5%; }
+.s2 .content { padding: 3%; display: flex; gap: 3%; height: calc(100% - 14%); }
+.s2 .left-col, .s2 .right-col { width: 50%; display: flex; flex-direction: column; gap: 2%; }
+.s2 .problem-card { background: #fff; border-radius: 12px; padding: 3%; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 6px solid #4299e1; flex: 1; overflow: hidden; }
+.s2 .challenge-card { background: #fff; border-radius: 12px; padding: 3%; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 6px solid #ed8936; }
+.s2 .card-title { font-size: clamp(12px, 1.4vw, 18px); font-weight: 700; color: #2d3748; margin-bottom: 3%; display: flex; align-items: center; gap: 2%; }
+.s2 .problem-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1.5%; }
+.s2 .problem-item { display: flex; align-items: flex-start; gap: 2%; padding: 2%; background: #f8fafc; border-radius: 8px; border-left: 3px solid #4299e1; }
+.s2 .problem-item i { color: #4299e1; margin-top: 0.5%; width: 18px; text-align: center; font-size: clamp(10px, 1vw, 14px); }
+.s2 .problem-text { font-size: clamp(10px, 1vw, 14px); color: #4a5568; line-height: 1.5; }
+.s2 .challenge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2%; }
+.s2 .challenge-item { background: #fff8f0; border: 1px solid #fed7aa; border-radius: 8px; padding: 2.5%; display: flex; align-items: flex-start; gap: 2%; }
+.s2 .challenge-item i { color: #ed8936; font-size: clamp(10px, 1vw, 14px); margin-top: 0.5%; }
+.s2 .challenge-text { font-size: clamp(9px, 0.95vw, 13px); color: #744210; line-height: 1.4; }
+.s2 .stat-box { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; padding: 3%; color: #fff; margin-top: auto; }
+.s2 .stat-number { font-size: clamp(18px, 2.5vw, 32px); font-weight: 800; }
+.s2 .stat-label { font-size: clamp(9px, 1vw, 13px); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; }
+.s2 .solution-card { background: #fff; border-radius: 12px; padding: 3%; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 6px solid #9f7aea; }
+.s2 .phase-box { flex: 1; padding: 2.5%; border-radius: 8px; text-align: center; }
+.s2 .phase-title { font-size: clamp(10px, 1.1vw, 14px); font-weight: 700; margin-bottom: 0.5%; }
+.s2 .phase-desc { font-size: clamp(9px, 0.9vw, 12px); }
+
+/* ===== SLIDE 3: Objectives (dark) ===== */
+.s3 { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+.s3 .bg-dots { position: absolute; top:0; left:0; width:100%; height:100%; opacity:0.1; background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 40px 40px; }
+.s3 .main { position: relative; z-index: 10; width:100%; height:100%; padding: 3.5% 4%; }
+.s3 .header-row { display: flex; align-items: center; gap: 1.5%; margin-bottom: 3%; }
+.s3 .bar { width: 8px; height: clamp(24px, 3vw, 40px); background: #3b82f6; border-radius: 4px; }
+.s3 .title { font-family: 'Inter', sans-serif; font-size: clamp(18px, 2.5vw, 32px); font-weight: 700; color: #fff; }
+.s3 .sub { font-size: clamp(9px, 1vw, 14px); color: #94a3b8; margin-top: 0.5%; }
+.s3 .obj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2%; }
+.s3 .obj-card { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 3%; }
+.s3 .obj-icon { width: clamp(24px, 2.5vw, 32px); height: clamp(24px, 2.5vw, 32px); background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 2%; }
+.s3 .obj-icon span { font-size: clamp(12px, 1.2vw, 16px); }
+.s3 .obj-name { font-size: clamp(11px, 1.2vw, 16px); font-weight: 600; color: #fff; margin-bottom: 2%; }
+.s3 .obj-desc { font-size: clamp(9px, 1vw, 13px); color: #cbd5e1; line-height: 1.5; }
+.s3 .features-bar { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 2.5% 3%; margin-top: 3%; }
+.s3 .feat-title { font-size: clamp(11px, 1.2vw, 16px); font-weight: 600; color: #fff; margin-bottom: 2%; }
+.s3 .feat-row { display: flex; gap: 2%; }
+.s3 .feat-item { flex: 1; padding: 2%; background: rgba(59,130,246,0.1); border-radius: 8px; }
+.s3 .feat-check { color: #3b82f6; font-size: clamp(10px, 1vw, 14px); margin-bottom: 0.5%; }
+.s3 .feat-name { font-size: clamp(9px, 1vw, 13px); color: #fff; }
+.s3 .feat-sub { font-size: clamp(8px, 0.8vw, 11px); color: #94a3b8; }
+.s3 .footer { position: absolute; bottom: 2%; left: 4%; right: 4%; display: flex; justify-content: space-between; }
+.s3 .footer span { font-size: clamp(8px, 0.9vw, 12px); color: #94a3b8; }
+
+/* ===== SLIDES 4-10: Common dark theme styles ===== */
+.dark-slide { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+.dark-slide .bg-pattern { position: absolute; top:0; left:0; width:100%; height:100%; opacity:0.05; background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px; }
+.dark-slide .main { position: relative; z-index: 10; width:100%; height:100%; padding: 3% 4%; display: flex; flex-direction: column; }
+.dark-slide .header-sec { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5%; }
+.dark-slide .title { font-family: 'Montserrat', sans-serif; font-size: clamp(18px, 2.5vw, 36px); font-weight: 700; color: #fff; }
+.dark-slide .title-hl { color: #3b82f6; }
+.dark-slide .sub { font-size: clamp(10px, 1.2vw, 18px); color: #94a3b8; margin-top: 0.5%; }
+.dark-slide .content-grid { display: flex; gap: 2.5%; flex: 1; min-height: 0; }
+.dark-slide .left-col { display: flex; flex-direction: column; gap: 2%; }
+.dark-slide .right-col { display: flex; flex-direction: column; gap: 2%; }
+.dark-slide .card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 3%; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+.dark-slide .card-title { font-size: clamp(12px, 1.4vw, 20px); font-weight: 600; color: #fff; margin-bottom: 3%; display: flex; align-items: center; gap: 2%; }
+.dark-slide .card-icon { color: #3b82f6; font-size: clamp(10px, 1.2vw, 18px); }
+.dark-slide .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 0.5% 1.5%; background: rgba(16,185,129,0.2); border-radius: 20px; font-size: clamp(9px, 1vw, 13px); color: #10b981; font-weight: 500; }
+.dark-slide .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; }
+
+/* Slide 4 specifics */
+.s4 .left-col { width: 65%; }
+.s4 .right-col { width: 35%; }
+.s4 .stat-row { display: flex; gap: 2%; margin-bottom: 3%; }
+.s4 .stat-item { flex: 1; background: rgba(59,130,246,0.1); border-radius: 8px; padding: 2% 1.5%; text-align: center; }
+.s4 .stat-val { font-size: clamp(14px, 1.7vw, 22px); font-weight: 700; color: #3b82f6; }
+.s4 .stat-lbl { font-size: clamp(8px, 0.9vw, 12px); color: #94a3b8; }
+.s4 .dist-bar { height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; display: flex; margin-top: 2%; }
+.s4 .dist-del { height: 100%; background: #ef4444; width: 14.5%; }
+.s4 .dist-non { height: 100%; background: #10b981; width: 85.5%; }
+.s4 .dist-labels { display: flex; justify-content: space-between; margin-top: 1%; }
+.s4 .dist-label { font-size: clamp(8px, 0.9vw, 12px); color: #94a3b8; }
+.s4 .dist-count { font-size: clamp(9px, 1vw, 13px); color: #fff; font-weight: 600; }
+.s4 .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5%; }
+.s4 .feat-item { display: flex; align-items: center; gap: 2%; padding: 2%; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+.s4 .feat-icon { width: clamp(20px, 2.5vw, 32px); height: clamp(20px, 2.5vw, 32px); flex-shrink: 0; background: rgba(59,130,246,0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: clamp(8px, 1vw, 14px); }
+.s4 .feat-text { font-size: clamp(8px, 0.9vw, 12px); font-weight: 600; color: #e2e8f0; }
+.s4 .feat-desc { font-size: clamp(7px, 0.7vw, 10px); color: #94a3b8; }
+.s4 .eng-list { display: flex; flex-direction: column; gap: 1.5%; }
+.s4 .eng-item { display: flex; align-items: center; gap: 2%; padding: 2% 3%; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+.s4 .eng-icon { color: #10b981; font-size: clamp(10px, 1vw, 14px); }
+.s4 .eng-text { font-size: clamp(9px, 1vw, 13px); color: #e2e8f0; flex: 1; }
+.s4 .eng-val { font-size: clamp(8px, 0.9vw, 12px); color: #10b981; font-weight: 600; }
+.s4 .target-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 1%; }
+
+/* Slide 5 */
+.s5 .left-col { width: 68%; }
+.s5 .right-col { width: 32%; }
+.s5 .pipeline { display: flex; align-items: center; justify-content: space-between; gap: 1%; margin-bottom: 3%; padding: 3%; background: rgba(59,130,246,0.05); border-radius: 12px; border: 1px solid rgba(59,130,246,0.2); }
+.s5 .pipe-step { flex: 1; text-align: center; padding: 2% 0.5%; background: rgba(59,130,246,0.1); border-radius: 8px; border: 1px solid rgba(59,130,246,0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60px; }
+.s5 .pipe-step.active { background: rgba(59,130,246,0.2); border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.2); }
+.s5 .pipe-icon { font-size: clamp(12px, 1.5vw, 20px); color: #3b82f6; margin-bottom: 1%; }
+.s5 .pipe-text { font-size: clamp(8px, 0.85vw, 11px); color: #e2e8f0; font-weight: 600; }
+.s5 .pipe-arrow { color: #3b82f6; font-size: clamp(8px, 1vw, 14px); opacity: 0.7; }
+.s5 .leak-section { display: flex; gap: 2%; }
+.s5 .leak-box { width: 25%; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 2%; display: flex; flex-direction: column; gap: 1.5%; }
+.s5 .leak-title { font-size: clamp(8px, 0.9vw, 12px); font-weight: 700; color: #ef4444; text-align: center; }
+.s5 .leak-item { background: rgba(239,68,68,0.15); border-radius: 4px; padding: 1%; font-size: clamp(8px, 0.85vw, 11px); color: #fca5a5; text-align: center; border: 1px solid rgba(239,68,68,0.1); }
+.s5 .imp-box { flex: 1; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.2); border-radius: 8px; padding: 3%; }
+.s5 .imp-title { font-size: clamp(10px, 1.2vw, 15px); font-weight: 600; color: #10b981; margin-bottom: 2%; display: flex; align-items: center; gap: 2%; }
+.s5 .imp-text { font-size: clamp(9px, 1.1vw, 14px); color: #cbd5e1; line-height: 1.6; }
+.s5 .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2%; }
+.s5 .metric-item { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 3%; display: flex; align-items: center; gap: 3%; border: 1px solid rgba(255,255,255,0.05); }
+.s5 .metric-icon { width: clamp(24px, 2.8vw, 36px); height: clamp(24px, 2.8vw, 36px); background: rgba(59,130,246,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: clamp(10px, 1.2vw, 16px); }
+.s5 .metric-text { font-size: clamp(8px, 0.9vw, 12px); color: #94a3b8; }
+.s5 .metric-val { font-size: clamp(10px, 1.2vw, 16px); font-weight: 700; color: #3b82f6; }
+.s5 .feature-list { display: flex; flex-direction: column; gap: 2%; }
+.s5 .feature-item { display: flex; align-items: center; gap: 3%; font-size: clamp(9px, 1.1vw, 14px); color: #e2e8f0; }
+.s5 .feature-item i { color: #3b82f6; font-size: clamp(8px, 0.9vw, 12px); }
+
+/* Slide 6 */
+.s6 .left-col { width: 63%; }
+.s6 .right-col { width: 37%; }
+.s6 .metrics-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5%; margin-bottom: 3%; }
+.s6 .metric-card { background: rgba(59,130,246,0.1); border-radius: 12px; padding: 2.5% 1%; text-align: center; border: 1px solid rgba(59,130,246,0.2); }
+.s6 .metric-val { font-size: clamp(16px, 2.2vw, 28px); font-weight: 700; color: #3b82f6; font-family: 'Montserrat', sans-serif; }
+.s6 .metric-lbl { font-size: clamp(8px, 0.9vw, 12px); color: #94a3b8; font-weight: 500; }
+.s6 .metric-chg { font-size: clamp(8px, 0.85vw, 11px); color: #10b981; }
+.s6 .interp { background: rgba(16,185,129,0.05); border-radius: 12px; padding: 3%; border: 1px solid rgba(16,185,129,0.2); }
+.s6 .interp-title { font-size: clamp(10px, 1.2vw, 16px); font-weight: 600; color: #10b981; margin-bottom: 2%; display: flex; align-items: center; gap: 2%; }
+.s6 .interp-text { font-size: clamp(9px, 1.1vw, 14px); color: #e2e8f0; line-height: 1.5; margin-bottom: 3%; }
+.s6 .key-point { display: flex; align-items: center; gap: 2%; font-size: clamp(9px, 1vw, 13px); color: #cbd5e1; margin-bottom: 1.5%; }
+.s6 .key-point i { color: #10b981; font-size: clamp(8px, 0.9vw, 12px); }
+.s6 .model-info { display: flex; align-items: center; gap: 3%; padding: 2.5%; background: rgba(59,130,246,0.1); border-radius: 8px; margin-bottom: 3%; }
+.s6 .model-icon { width: clamp(30px, 3.8vw, 48px); height: clamp(30px, 3.8vw, 48px); background: rgba(59,130,246,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: clamp(12px, 1.5vw, 20px); }
+.s6 .detail-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2%; }
+.s6 .detail-lbl { font-size: clamp(9px, 1vw, 13px); color: #94a3b8; }
+.s6 .detail-val { font-size: clamp(9px, 1vw, 13px); color: #e2e8f0; font-weight: 600; }
+.s6 .prog-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+/* Slide 7 (light theme) */
+.s7 { background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%); }
+.s7 .header { background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); color: #fff; padding: 3% 3.5%; display: flex; justify-content: space-between; align-items: center; }
+.s7 .slide-title { font-size: clamp(18px, 2.5vw, 32px); font-weight: 700; }
+.s7 .slide-sub { font-size: clamp(10px, 1.2vw, 16px); opacity: 0.9; margin-top: 0.5%; }
+.s7 .content { padding: 3%; display: flex; gap: 3%; height: calc(100% - 14%); }
+.s7 .left-col, .s7 .right-col { width: 50%; display: flex; flex-direction: column; gap: 2.5%; }
+.s7 .xcard { background: #fff; border-radius: 12px; padding: 3%; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.s7 .xcard-blue { border-left: 6px solid #4299e1; }
+.s7 .xcard-green { border-left: 6px solid #48bb78; }
+.s7 .xcard-orange { border-left: 6px solid #ed8936; }
+.s7 .card-title { font-size: clamp(12px, 1.4vw, 18px); font-weight: 700; color: #2d3748; margin-bottom: 3%; display: flex; align-items: center; gap: 2%; }
+.s7 .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2%; }
+.s7 .tech-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 3%; display: flex; align-items: flex-start; gap: 3%; }
+.s7 .tech-icon { color: #4299e1; font-size: clamp(12px, 1.4vw, 18px); margin-top: 0.3%; }
+.s7 .tech-name { font-weight: 600; color: #2d3748; margin-bottom: 0.5%; font-size: clamp(9px, 1vw, 13px); }
+.s7 .tech-desc { font-size: clamp(8px, 0.9vw, 12px); color: #4a5568; }
+.s7 .value-box { background: linear-gradient(135deg, #48bb78, #38a169); border-radius: 12px; padding: 3%; color: #fff; }
+.s7 .value-title { font-size: clamp(10px, 1.2vw, 16px); font-weight: 600; margin-bottom: 2%; display: flex; align-items: center; gap: 2%; }
+.s7 .value-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2%; }
+.s7 .value-item { background: rgba(255,255,255,0.2); padding: 2%; border-radius: 8px; text-align: center; }
+.s7 .value-lbl { font-size: clamp(8px, 0.9vw, 12px); opacity: 0.9; }
+.s7 .value-num { font-size: clamp(12px, 1.4vw, 18px); font-weight: 700; }
+.s7 .feat-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1.5%; }
+.s7 .feat-item { display: flex; align-items: center; gap: 2%; padding: 2% 3%; background: #f8fafc; border-radius: 8px; border-left: 3px solid #48bb78; }
+.s7 .feat-icon { color: #48bb78; font-size: clamp(10px, 1vw, 14px); }
+.s7 .feat-text { font-size: clamp(9px, 1.1vw, 14px); color: #4a5568; }
+.s7 .feat-val { font-weight: 600; color: #2d3748; }
+.s7 .ben-row { display: flex; gap: 2%; margin-top: 1%; }
+.s7 .ben-item { flex: 1; padding: 2.5%; border-radius: 8px; }
+.s7 .ben-title { font-size: clamp(8px, 0.9vw, 12px); font-weight: 700; margin-bottom: 0.5%; }
+.s7 .ben-desc { font-size: clamp(7px, 0.8vw, 11px); line-height: 1.3; }
+
+/* Slide 8 - FIXED overflow */
+.s8 .left-col { width: 62%; }
+.s8 .right-col { width: 38%; }
+.s8 .why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2%; margin-bottom: 2%; }
+.s8 .why-item { background: rgba(59,130,246,0.1); border-radius: 8px; padding: 2.5%; border: 1px solid rgba(59,130,246,0.2); }
+.s8 .why-icon { font-size: clamp(12px, 1.7vw, 22px); color: #3b82f6; margin-bottom: 1.5%; }
+.s8 .why-text { font-size: clamp(9px, 1.1vw, 14px); color: #e2e8f0; font-weight: 600; margin-bottom: 1%; line-height: 1.3; }
+.s8 .why-desc { font-size: clamp(8px, 0.9vw, 12px); color: #94a3b8; line-height: 1.4; }
+.s8 .model-details { display: flex; gap: 1.5%; margin-top: 2%; }
+.s8 .model-item { flex: 1; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 2%; border: 1px solid rgba(255,255,255,0.1); }
+.s8 .model-lbl { font-size: clamp(8px, 0.85vw, 12px); color: #94a3b8; margin-bottom: 1%; }
+.s8 .model-val { font-size: clamp(10px, 1.2vw, 16px); color: #fff; font-weight: 700; }
+.s8 .lstm-visual { display: flex; align-items: center; gap: 1.5%; margin: 1.5% 0; }
+.s8 .lstm-node { background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 1.5% 2%; text-align: center; flex: 1; }
+.s8 .lstm-label { font-size: clamp(9px, 1vw, 13px); color: #e2e8f0; font-weight: 600; }
+.s8 .lstm-arrow { color: #3b82f6; font-size: clamp(8px, 1vw, 16px); }
+.s8 .seq-info { padding: 2%; background: rgba(59,130,246,0.1); border-radius: 8px; border: 1px solid rgba(59,130,246,0.2); }
+.s8 .seq-text { font-size: clamp(9px, 1vw, 13px); color: #e2e8f0; line-height: 1.5; }
+.s8 .seq-hl { color: #3b82f6; font-weight: 600; }
+.s8 .feat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5%; }
+.s8 .feat-item { display: flex; align-items: center; gap: 2%; padding: 2%; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+.s8 .feat-icon { width: clamp(24px, 2.8vw, 36px); height: clamp(24px, 2.8vw, 36px); flex-shrink: 0; background: rgba(59,130,246,0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: clamp(10px, 1.2vw, 16px); }
+.s8 .feat-text { font-size: clamp(9px, 1vw, 13px); font-weight: 600; color: #e2e8f0; }
+.s8 .feat-desc { font-size: clamp(7px, 0.8vw, 11px); color: #94a3b8; }
+.s8 .key-metrics { margin-top: 2%; }
+.s8 .km-row { margin-bottom: 2%; }
+.s8 .km-labels { display: flex; justify-content: space-between; margin-bottom: 1%; }
+.s8 .km-lbl { font-size: clamp(9px, 1.1vw, 14px); color: #e2e8f0; }
+.s8 .km-val { font-size: clamp(9px, 1.1vw, 14px); font-weight: 700; }
+.s8 .km-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; }
+.s8 .km-fill { height: 100%; border-radius: 5px; }
+
+/* Slide 9 */
+.s9 .left-col { width: 63%; }
+.s9 .right-col { width: 37%; }
+.s9 .metrics-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5%; margin-bottom: 3%; }
+.s9 .metric-card { background: rgba(59,130,246,0.1); border-radius: 12px; padding: 2.5% 1%; text-align: center; border: 1px solid rgba(59,130,246,0.2); }
+.s9 .metric-val { font-size: clamp(14px, 2vw, 26px); font-weight: 700; color: #3b82f6; font-family: 'Montserrat', sans-serif; }
+.s9 .metric-lbl { font-size: clamp(8px, 1vw, 13px); color: #94a3b8; font-weight: 500; }
+.s9 .metric-chg { font-size: clamp(8px, 0.85vw, 12px); color: #10b981; }
+.s9 .hybrid-sec { background: rgba(59,130,246,0.1); border-radius: 12px; padding: 3%; border: 1px solid rgba(59,130,246,0.2); }
+.s9 .hybrid-title { font-size: clamp(12px, 1.4vw, 18px); font-weight: 600; color: #3b82f6; margin-bottom: 2%; display: flex; align-items: center; gap: 2%; }
+.s9 .hybrid-formula { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 2.5%; margin-bottom: 3%; font-family: 'Courier New', monospace; font-size: clamp(9px, 1.2vw, 15px); color: #e2e8f0; text-align: center; border: 1px solid rgba(59,130,246,0.3); }
+.s9 .hybrid-benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2%; }
+.s9 .benefit-item { display: flex; align-items: flex-start; gap: 2%; font-size: clamp(9px, 1vw, 13px); color: #cbd5e1; line-height: 1.4; }
+.s9 .benefit-item i { color: #10b981; font-size: clamp(10px, 1vw, 14px); margin-top: 0.3%; }
+.s9 .detail-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2%; margin-bottom: 2%; }
+.s9 .detail-lbl { font-size: clamp(9px, 1.1vw, 14px); color: #94a3b8; }
+.s9 .detail-val { font-size: clamp(9px, 1.1vw, 14px); color: #e2e8f0; font-weight: 600; }
+.s9 .risk-row { margin-bottom: 3%; }
+.s9 .risk-labels { display: flex; justify-content: space-between; margin-bottom: 1%; }
+.s9 .risk-lbl { font-size: clamp(9px, 1.1vw, 14px); color: #e2e8f0; }
+.s9 .risk-val { font-size: clamp(9px, 1.1vw, 14px); font-weight: 600; }
+.s9 .prog-bar { height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; }
+.s9 .prog-fill { height: 100%; border-radius: 5px; }
+
+/* Slide 10 */
+.s10 .left-col { width: 50%; }
+.s10 .mid-col { width: 50%; }
+.s10 .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2%; flex: 1; }
+.s10 .dash-item { display: flex; flex-direction: column; gap: 2%; padding: 3%; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); justify-content: center; }
+.s10 .dash-icon { width: clamp(20px, 2.5vw, 32px); height: clamp(20px, 2.5vw, 32px); background: rgba(59,130,246,0.15); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: clamp(8px, 1vw, 14px); }
+.s10 .dash-text { font-size: clamp(9px, 1vw, 13px); color: #e2e8f0; line-height: 1.4; }
+.s10 .impact-grid { display: grid; grid-template-columns: 1fr; gap: 2%; flex: 1; }
+.s10 .impact-item { background: rgba(16,185,129,0.08); border-radius: 10px; padding: 3%; border: 1px solid rgba(16,185,129,0.15); }
+.s10 .impact-header { display: flex; align-items: center; gap: 2%; margin-bottom: 1.5%; }
+.s10 .impact-icon { color: #10b981; font-size: clamp(10px, 1.2vw, 16px); }
+.s10 .impact-title { font-size: clamp(9px, 1.1vw, 14px); font-weight: 600; color: #10b981; }
+.s10 .impact-text { font-size: clamp(8px, 1vw, 13px); color: #94a3b8; margin-bottom: 1.5%; }
+.s10 .prog-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; }
+.s10 .prog-fill { height: 100%; background: #10b981; border-radius: 3px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .slide-container { aspect-ratio: auto; min-height: auto; }
+  .s1 .grid, .s2 .content, .s7 .content,
+  .dark-slide .content-grid { flex-direction: column; }
+  .s1 .left, .s1 .right, .s2 .left-col, .s2 .right-col,
+  .s7 .left-col, .s7 .right-col,
+  .dark-slide .left-col, .dark-slide .right-col,
+  .s10 .left-col, .s10 .mid-col { width: 100% !important; }
+  .s1 .right { border-left: none; padding-left: 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 3%; }
+  .s3 .obj-grid { grid-template-columns: 1fr; }
+  .s4 .feat-grid { grid-template-columns: repeat(2, 1fr); }
+  .s6 .metrics-row, .s9 .metrics-row { grid-template-columns: repeat(3, 1fr); }
+  .s8 .why-grid { grid-template-columns: 1fr; }
+  .s8 .feat-grid { grid-template-columns: 1fr; }
+  .s10 .dash-grid { grid-template-columns: repeat(2, 1fr); }
+  .slide-container { padding-bottom: 4%; }
+}
+
+/* Global slide footer */
+.slide-footer {
+  position: absolute; bottom: 1.5%; left: 3%; right: 3%;
+  text-align: center; font-size: clamp(8px, 0.9vw, 12px);
+  color: #64748b; font-weight: 500; letter-spacing: 0.5px;
+  border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.8%;
+}
+.s2 .slide-footer, .s7 .slide-footer {
+  color: #94a3b8; border-top-color: rgba(0,0,0,0.1);
+}
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="slide-nav">
+  <a href="#slide1">1. Title</a>
+  <a href="#slide2">2. Problem</a>
+  <a href="#slide3">3. Objectives</a>
+  <a href="#slide4">4. Dataset</a>
+  <a href="#slide5">5. Phase-1 Arch</a>
+  <a href="#slide6">6. Phase-1 Results</a>
+  <a href="#slide7">7. Explainability</a>
+  <a href="#slide8">8. Phase-2 Model</a>
+  <a href="#slide9">9. Hybrid Framework</a>
+  <a href="#slide10">10. Dashboard</a>
+</nav>
+
+<div class="slide-wrapper">
+
+<!-- SLIDE 1: Title -->
+<section class="slide-section" id="slide1">
+<div class="slide-container s1">
+  <div class="bg-pattern"></div>
+  <div class="shape shape1"></div><div class="shape shape2"></div><div class="shape shape3"></div>
+  <div class="main">
+    <div class="header">
+      <h1 class="title"><span class="title-hl">Explainable Machine Learning</span> Framework</h1>
+      <div class="title2">for Early Detection of Loan Delinquency in Banking</div>
+      <div class="subtitle">M.Tech Project Presentation</div>
+    </div>
+    <div class="grid">
+      <div class="left">
+        <div class="info-card">
+          <div class="student-info">
+            <div class="avatar">SD</div>
+            <div><div class="student-name">Sanidhya Dash</div><div class="student-id">M25AI1036 | M.Tech (AI)</div></div>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Project Focus</div>
+          <div class="info-value">Early Risk Detection &amp; XAI</div>
+
+        </div>
+      </div>
+      <div class="right">
+        <div class="info-card">
+          <div class="faculty-info">
+            <div class="faculty-icon"><i class="fas fa-user-graduate"></i></div>
+            <div><div class="faculty-label">Faculty Guide</div><div class="faculty-name">Dr. Binod Kumar</div></div>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Key Technologies</div>
+          <div class="tech-icons">
+            <div class="tech-icon"><i class="fas fa-brain"></i></div>
+            <div class="tech-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="tech-icon"><i class="fas fa-database"></i></div>
+            <div class="tech-icon"><i class="fas fa-shield-alt"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom" style="flex-direction:column;align-items:center;gap:8px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <!-- <img src="data:image/png;base64,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" alt="IIT Jodhpur Logo" style="width:clamp(36px,5vw,56px);height:auto;"/> -->
+        <div style="text-align:left;">
+            <div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:2.5% 4%;border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;">
+            <div style="font-size:clamp(20px,1.6vw,28px);color:#fff;font-weight:600;text-align:center;line-height:1.3;">Indian Institute of Technology, Jodhpur</div>
+            </div>
+        </div>
+      </div>
+      <!-- <div style="font-size:clamp(10px,1.2vw,16px);color:#94a3b8;font-style:italic;letter-spacing:0.5px;">Towards Transparent &amp; Trustworthy AI in Banking</div>
+      <div style="font-size:clamp(9px,0.9vw,12px);color:#64748b;margin-top:4px;">M.Tech - Artificial Intelligence | IIT Jodhpur</div> -->
+    </div>
+  </div>
+<div class="slide-footer">M.Tech - Artificial Intelligence | IIT Jodhpur</div>
+</div>
+</section>
+
+<!-- SLIDE 2: Problem Statement -->
+<section class="slide-section" id="slide2">
+<div class="slide-container s2">
+  <div class="header">
+    <div>
+      <div class="slide-title">Problem Statement</div>
+      <div class="slide-sub">Loan delinquency challenges in the banking sector</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:center;">
+      <div style="text-align:right;"><div style="font-size:clamp(10px,1.2vw,16px);font-weight:600;">M.Tech Project</div><div style="font-size:clamp(9px,1vw,13px);opacity:0.8;">AI &amp; ML Framework</div></div>
+      <i class="fas fa-graduation-cap" style="font-size:clamp(18px,2.5vw,32px);opacity:0.9;"></i>
+    </div>
+  </div>
+  <div class="content">
+    <div class="left-col">
+      <div class="problem-card">
+        <div class="card-title"><i class="fas fa-exclamation-triangle" style="color:#4299e1"></i><span>Operational Pain Points</span></div>
+        <ul class="problem-list">
+          <li class="problem-item"><i class="fas fa-money-bill-wave"></i><div class="problem-text"><strong>NPAs &amp; Financial Losses:</strong> Delinquency leads to increased Non-Performing Assets and significant revenue erosion.</div></li>
+          <li class="problem-item"><i class="fas fa-cogs"></i><div class="problem-text"><strong>Rigid Rule-Based Systems:</strong> Static systems fail to adapt to evolving customer behavior and complex financial patterns.</div></li>
+          <li class="problem-item"><i class="fas fa-eye-slash"></i><div class="problem-text"><strong>Black-Box ML Models:</strong> Significant lack of explainability hinders trust and prevents effective manual overrides.</div></li>
+          <li class="problem-item"><i class="fas fa-balance-scale"></i><div class="problem-text"><strong>Regulatory Compliance:</strong> Compliance standards mandate transparent, fair, and fully interpretable AI decision systems.</div></li>
+          <li class="problem-item"><i class="fas fa-bell"></i><div class="problem-text"><strong>Early Warning System:</strong> Absence of proactive identifiers to detect high-risk customers before actual default occurs.</div></li>
+        </ul>
+      </div>
+      <div class="stat-box">
+        <div style="display:flex;justify-content:space-around;align-items:center;text-align:center;">
+          <div><div class="stat-number">15%</div><div class="stat-label">Avg. NPAs</div></div>
+          <div style="width:1px;height:40px;background:rgba(255,255,255,0.2);"></div>
+          <div><div class="stat-number">$2.5T</div><div class="stat-label">Global Losses</div></div>
+          <div style="width:1px;height:40px;background:rgba(255,255,255,0.2);"></div>
+          <div><div class="stat-number">30%</div><div class="stat-label">Default Risk</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="right-col">
+      <div class="challenge-card">
+        <div class="card-title"><i class="fas fa-tasks" style="color:#ed8936"></i><span>Technical Challenges</span></div>
+        <div class="challenge-grid">
+          <div class="challenge-item"><i class="fas fa-database"></i><div class="challenge-text"><strong>Imbalanced Data:</strong> Extreme scarcity of default cases compared to non-default transactions.</div></div>
+          <div class="challenge-item"><i class="fas fa-search"></i><div class="challenge-text"><strong>Data Leakage:</strong> Managing overlapping timeline features that bias model training results.</div></div>
+          <div class="challenge-item"><i class="fas fa-chart-line"></i><div class="challenge-text"><strong>Trade-offs:</strong> Balancing high predictive accuracy with granular feature interpretability.</div></div>
+          <div class="challenge-item"><i class="fas fa-clock"></i><div class="challenge-text"><strong>Temporal Analysis:</strong> Capturing shifting financial behaviors over extended sequences.</div></div>
+        </div>
+      </div>
+      <div class="solution-card">
+        <div class="card-title"><i class="fas fa-lightbulb" style="color:#9f7aea"></i><span>Proposed Solution Architecture</span></div>
+        <div style="display:flex;gap:2%;margin-top:1%;">
+          <div class="phase-box" style="background:#f0fff4;border:1px solid #68d391;"><div class="phase-title" style="color:#22543d;">Phase 1</div><div class="phase-desc" style="color:#276749;">XGBoost + SHAP Explainer</div></div>
+          <div class="phase-box" style="background:#ebf8ff;border:1px solid #4299e1;"><div class="phase-title" style="color:#2c5282;">Phase 2</div><div class="phase-desc" style="color:#2b6cb0;">LSTM Temporal Modeling</div></div>
+          <div class="phase-box" style="background:#faf5ff;border:1px solid #9f7aea;"><div class="phase-title" style="color:#553c9a;">Ensemble</div><div class="phase-desc" style="color:#6b46c1;">Hybrid Decision Framework</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+<div class="slide-footer">M.Tech - Artificial Intelligence | IIT Jodhpur</div>
+</div>
+</section>
+
+<!-- SLIDE 3: Objectives -->
+<section class="slide-section" id="slide3">
+<div class="slide-container s3">
+  <div class="bg-dots"></div>
+  <div class="main">
+    <div class="header-row"><div class="bar"></div><div><div class="title">Objectives of the Project</div><div class="sub">Key goals and deliverables for the loan delinquency detection system</div></div></div>
+    <div class="obj-grid">
+      <div class="obj-card"><div class="obj-icon"><span>🤖</span></div><div class="obj-name">ML Models</div><div class="obj-desc">Build predictive ML models for delinquency detection using advanced algorithms</div></div>
+      <div class="obj-card"><div class="obj-icon"><span>🔍</span></div><div class="obj-name">Explainability</div><div class="obj-desc">Integrate SHAP and LIME techniques for model interpretability</div></div>
+      <div class="obj-card"><div class="obj-icon"><span>⚖️</span></div><div class="obj-name">Fairness</div><div class="obj-desc">Evaluate fairness and bias in predictions across different groups</div></div>
+      <div class="obj-card"><div class="obj-icon"><span>🔄</span></div><div class="obj-name">Hybrid Framework</div><div class="obj-desc">Develop hybrid XGBoost + LSTM framework for enhanced accuracy</div></div>
+      <div class="obj-card"><div class="obj-icon"><span>📊</span></div><div class="obj-name">Interactive Dashboard</div><div class="obj-desc">Build interactive banking dashboard for risk monitoring</div></div>
+    </div>
+    <div class="features-bar">
+      <div class="feat-title">Key Features</div>
+      <div class="feat-row">
+        <div class="feat-item"><div class="feat-check">✓</div><div><div class="feat-name">XGBoost &amp; LSTM Integration</div><div class="feat-sub">Combined for superior performance</div></div></div>
+        <div class="feat-item"><div class="feat-check">✓</div><div><div class="feat-name">SHAP Explainability</div><div class="feat-sub">Transparent AI predictions</div></div></div>
+        <div class="feat-item"><div class="feat-check">✓</div><div><div class="feat-name">Real-time Monitoring</div><div class="feat-sub">Live risk assessment</div></div></div>
+      </div>
+    </div>
+    <div class="footer"><span>M.Tech Project | AI &amp; Machine Learning</span><span>Page 3</span></div>
+  </div>
+<div class="slide-footer">M.Tech - Artificial Intelligence | IIT Jodhpur</div>
+</div>
+</section>
+
+<!-- SLIDE 4: Dataset -->
+<section class="slide-section" id="slide4">
+<div class="slide-container dark-slide s4">
+  <div class="bg-pattern"></div>
+  <div class="main">
+    <div class="header-sec">
+      <div><h1 class="title"><span class="title-hl">Dataset</span> and Feature Engineering</h1><div class="sub">Synthetic banking loan records with 55 original features and 11 engineered features</div></div>
+      <div style="display:flex;align-items:center;gap:2%;"><span style="font-size:clamp(10px,1.2vw,16px);color:#94a3b8;font-weight:500;">5,000 records</span><div style="width:10px;height:10px;background:#10b981;border-radius:50%;box-shadow:0 0 10px rgba(16,185,129,0.5);"></div></div>
+    </div>
+    <div class="content-grid">
+      <div class="left-col">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-database card-icon"></i><span>Dataset Details</span></div>
+          <div class="stat-row">
+            <div class="stat-item"><div class="stat-val">5,000</div><div class="stat-lbl">Total Records</div></div>
+            <div class="stat-item"><div class="stat-val">55 → 66</div><div class="stat-lbl">Features</div></div>
+            <div class="stat-item"><div class="stat-val">725</div><div class="stat-lbl">Delinquent</div></div>
+            <div class="stat-item"><div class="stat-val">4,275</div><div class="stat-lbl">Non-Delinquent</div></div>
+          </div>
+          <div class="dist-bar"><div class="dist-del"></div><div class="dist-non"></div></div>
+          <div class="dist-labels"><div><span class="dist-label">Delinquent: </span><span class="dist-count">725 (14.5%)</span></div><div><span class="dist-label">Non-Delinquent: </span><span class="dist-count">4,275 (85.5%)</span></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-list-check card-icon"></i><span>Important Features Used</span></div>
+          <div class="feat-grid">
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-dollar-sign"></i></div><div><div class="feat-text">Annual Income</div><div class="feat-desc">Primary income</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-percentage"></i></div><div><div class="feat-text">Debt-to-Income</div><div class="feat-desc">Ratio calculation</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-money-bill-wave"></i></div><div><div class="feat-text">Loan Amount</div><div class="feat-desc">Principal borrowed</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-percent"></i></div><div><div class="feat-text">Interest Rate</div><div class="feat-desc">Annual percentage</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-credit-card"></i></div><div><div class="feat-text">Credit Utilization</div><div class="feat-desc">Usage ratio</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-history"></i></div><div><div class="feat-text">Delinquency Hist.</div><div class="feat-desc">Past payments</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-file-contract"></i></div><div><div class="feat-text">Legal Issues</div><div class="feat-desc">Bankruptcy/Tax</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-calculator"></i></div><div><div class="feat-text">Installment Load</div><div class="feat-desc">Payment ratio</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-search"></i></div><div><div class="feat-text">Recent Inquiries</div><div class="feat-desc">Credit checks</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="right-col">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-cogs card-icon"></i><span>Feature Engineering</span></div>
+          <div class="eng-list">
+            <div class="eng-item"><div class="eng-icon"><i class="fas fa-check-circle"></i></div><div class="eng-text">EMI to Income Ratio</div><div class="eng-val">Added</div></div>
+            <div class="eng-item"><div class="eng-icon"><i class="fas fa-check-circle"></i></div><div class="eng-text">Credit Utilization Ratio</div><div class="eng-val">Added</div></div>
+            <div class="eng-item"><div class="eng-icon"><i class="fas fa-check-circle"></i></div><div class="eng-text">Open Credit Ratio</div><div class="eng-val">Added</div></div>
+            <div class="eng-item"><div class="eng-icon"><i class="fas fa-check-circle"></i></div><div class="eng-text">Delinquency Score</div><div class="eng-val">Added</div></div>
+            <div class="eng-item"><div class="eng-icon"><i class="fas fa-check-circle"></i></div><div class="eng-text">Bankruptcy/Tax Issue</div><div class="eng-val">Added</div></div>
+            <div class="eng-item"><div class="eng-icon"><i class="fas fa-check-circle"></i></div><div class="eng-text">Installment Burden</div><div class="eng-val">Added</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-pie card-icon"></i><span>Target Distribution</span></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:1%;"><span style="font-size:clamp(9px,1vw,13px);color:#e2e8f0;">Delinquent</span><span style="font-size:clamp(9px,1vw,13px);color:#ef4444;font-weight:700;">14.5%</span></div><div class="target-bar"><div style="height:100%;background:#ef4444;border-radius:4px;width:14.5%;"></div></div></div>
+          <div style="margin-top:2%;"><div style="display:flex;justify-content:space-between;margin-bottom:1%;"><span style="font-size:clamp(9px,1vw,13px);color:#e2e8f0;">Non-Delinquent</span><span style="font-size:clamp(9px,1vw,13px);color:#10b981;font-weight:700;">85.5%</span></div><div class="target-bar"><div style="height:100%;background:#10b981;border-radius:4px;width:85.5%;"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+<div class="slide-footer">M.Tech - Artificial Intelligence | IIT Jodhpur</div>
+</div>
+</section>
+
+<!-- SLIDE 5: Phase-1 Architecture -->
+<section class="slide-section" id="slide5">
+<div class="slide-container dark-slide s5">
+  <div class="bg-pattern"></div>
+  <div class="main">
+    <div class="header-sec">
+      <div><h1 class="title"><span class="title-hl">Phase-1</span> Architecture and Model</h1><div class="sub">XGBoost-based risk prediction model with SHAP explainability</div></div>
+      <div style="display:flex;align-items:center;gap:2%;background:rgba(255,255,255,0.03);padding:1% 2%;border-radius:20px;border:1px solid rgba(255,255,255,0.05);"><span style="font-size:clamp(9px,1vw,13px);color:#94a3b8;">Pipeline Status:</span><div class="status-badge"><div class="status-dot"></div><span>Active</span></div></div>
+    </div>
+    <div class="content-grid">
+      <div class="left-col">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-project-diagram card-icon"></i><span>Phase-1 Pipeline Flow</span></div>
+          <div class="pipeline">
+            <div class="pipe-step active"><div class="pipe-icon"><i class="fas fa-database"></i></div><div class="pipe-text">Data Ingestion</div></div>
+            <div class="pipe-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="pipe-step"><div class="pipe-icon"><i class="fas fa-broom"></i></div><div class="pipe-text">Cleaning</div></div>
+            <div class="pipe-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="pipe-step"><div class="pipe-icon"><i class="fas fa-filter"></i></div><div class="pipe-text">Leakage Removal</div></div>
+            <div class="pipe-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="pipe-step"><div class="pipe-icon"><i class="fas fa-cogs"></i></div><div class="pipe-text">Feature Eng.</div></div>
+            <div class="pipe-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="pipe-step"><div class="pipe-icon"><i class="fas fa-brain"></i></div><div class="pipe-text">XGBoost</div></div>
+            <div class="pipe-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="pipe-step"><div class="pipe-icon"><i class="fas fa-eye"></i></div><div class="pipe-text">SHAP</div></div>
+            <div class="pipe-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="pipe-step"><div class="pipe-icon"><i class="fas fa-chart-line"></i></div><div class="pipe-text">Dashboard</div></div>
+          </div>
+          <div class="leak-section">
+            <div class="leak-box">
+              <div class="leak-title"><i class="fas fa-exclamation-triangle" style="display:block;margin-bottom:4px;"></i>Leakage Columns Removed</div>
+              <div class="leak-item">Balance</div><div class="leak-item">Paid Total</div><div class="leak-item">Principal</div><div class="leak-item">Interest</div><div class="leak-item">Late Fees</div>
+            </div>
+            <div class="imp-box">
+              <div class="imp-title"><i class="fas fa-check-circle"></i><span>Why Leakage Removal Matters</span></div>
+              <div class="imp-text">Prevents unrealistic model performance (data leakage) and ensures fair, real-world prediction capability by removing post-repayment information that wouldn't be available at the time of inference.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="right-col">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-bar card-icon"></i><span>Model Performance</span></div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-icon"><i class="fas fa-bullseye"></i></div><div><div class="metric-text">Accuracy</div><div class="metric-val">93.9%</div></div></div>
+            <div class="metric-item"><div class="metric-icon"><i class="fas fa-search"></i></div><div><div class="metric-text">Recall</div><div class="metric-val">90.3%</div></div></div>
+            <div class="metric-item"><div class="metric-icon"><i class="fas fa-crosshairs"></i></div><div><div class="metric-text">Precision</div><div class="metric-val">45.2%</div></div></div>
+            <div class="metric-item"><div class="metric-icon"><i class="fas fa-chart-area"></i></div><div><div class="metric-text">AUC</div><div class="metric-val">91.6%</div></div></div>
+          </div>
+          <div style="margin-top:3%;display:flex;align-items:center;justify-content:center;gap:2%;padding:2%;background:rgba(16,185,129,0.05);border-radius:6px;"><div class="status-dot"></div><span style="font-size:clamp(9px,1vw,13px);color:#10b981;font-weight:500;">Model Trained Successfully</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-info-circle card-icon"></i><span>Key Features</span></div>
+          <div class="feature-list">
+            <div class="feature-item"><i class="fas fa-check"></i><span>SHAP Explainability</span></div>
+            <div class="feature-item"><i class="fas fa-check"></i><span>Feature Importance Rankings</span></div>
+            <div class="feature-item"><i class="fas fa-check"></i><span>Real-time Monitoring Integration</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<div class="slide-footer">M.Tech - Artificial Intelligence | IIT Jodhpur</div>
+</div>
+</section>
+
+<!-- SLIDE 6: Phase-1 Results -->
+<section class="slide-section" id="slide6">
+<div class="slide-container dark-slide s6">
+  <div class="bg-pattern"></div>
+  <div class="main">
+    <div class="header-sec">
+      <div><h1 class="title"><span class="title-hl">Phase-1</span> Results - XGBoost Model Performance</h1><div class="sub">High-performing risk prediction model with 93.9% accuracy and 91.6% AUC</div></div>
+      <div style="display:flex;align-items:center;gap:2%;"><span style="font-size:clamp(9px,1vw,14px);color:#94a3b8;">Model Status:</span><div class="status-badge"><div class="status-dot"></div><span>Trained Successfully</span></div></div>
+    </div>
+    <div class="content-grid">
+      <div class="left-col">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-line card-icon"></i><span>Performance Metrics</span></div>
+          <div class="metrics-row">
+            <div class="metric-card"><div class="metric-val">93.9%</div><div class="metric-lbl">Accuracy</div><div class="metric-chg"><i class="fas fa-arrow-up"></i> +2.1%</div></div>
+            <div class="metric-card"><div class="metric-val">90.3%</div><div class="metric-lbl">Recall</div><div class="metric-chg"><i class="fas fa-arrow-up"></i> +1.5%</div></div>
+            <div class="metric-card"><div class="metric-val">45.2%</div><div class="metric-lbl">Precision</div><div class="metric-chg"><i class="fas fa-arrow-up"></i> +3.2%</div></div>
+            <div class="metric-card"><div class="metric-val">60.2%</div><div class="metric-lbl">F1-Score</div><div class="metric-chg"><i class="fas fa-arrow-up"></i> +2.8%</div></div>
+            <div class="metric-card"><div class="metric-val">91.6%</div><div class="metric-lbl">AUC</div><div class="metric-chg"><i class="fas fa-arrow-up"></i> +1.9%</div></div>
+          </div>
+          <div class="interp">
+            <div class="interp-title"><i class="fas fa-lightbulb"></i><span>Model Interpretation</span></div>
+            <div class="interp-text">The XGBoost model demonstrates strong delinquency detection capability with high recall (90.3%) ensuring most risky customers are identified. The high AUC (91.6%) indicates excellent separation between risky and safe customers.</div>
+            <div class="key-point"><i class="fas fa-check-circle"></i><span><strong>Strong delinquency detection:</strong> High recall means most risky customers are detected</span></div>
+            <div class="key-point"><i class="fas fa-check-circle"></i><span><strong>High AUC score:</strong> Strong separation between risky and safe customers</span></div>
+            <div class="key-point"><i class="fas fa-check-circle"></i><span><strong>Balanced performance:</strong> Good balance between precision and recall</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="right-col">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-info-circle card-icon"></i><span>Model Details</span></div>
+          <div class="model-info"><div class="model-icon"><i class="fas fa-brain"></i></div><div><div style="font-size:clamp(10px,1.2vw,15px);font-weight:600;color:#fff;">XGBoost Classifier</div><div style="font-size:clamp(8px,0.9vw,12px);color:#94a3b8;">Gradient boosting with 100 estimators</div></div></div>
+          <div class="detail-row"><span class="detail-lbl">Training Time</span><span class="detail-val">2.3 minutes</span></div>
+          <div class="detail-row"><span class="detail-lbl">Features Used</span><span class="detail-val">66</span></div>
+          <div class="detail-row"><span class="detail-lbl">Validation Split</span><span class="detail-val">80/20</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-pie card-icon"></i><span>Class Distribution</span></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:1%;"><span style="font-size:clamp(9px,1vw,13px);color:#e2e8f0;">Delinquent</span><span style="font-size:clamp(9px,1vw,13px);color:#ef4444;font-weight:600;">14.5%</span></div><div class="prog-bar" style="margin-bottom:2%;"><div style="height:8px;background:#ef4444;border-radius:4px;width:14.5%;"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:1%;"><span style="font-size:clamp(9px,1vw,13px);color:#e2e8f0;">Non-Delinquent</span><span style="font-size:clamp(9px,1vw,13px);color:#10b981;font-weight:600;">85.5%</span></div><div class="prog-bar"><div style="height:8px;background:#10b981;border-radius:4px;width:85.5%;"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+<div class="slide-footer">M.Tech - Artificial Intelligence | IIT Jodhpur</div>
+</div>
+</section>
+
+<!-- SLIDE 7: Explainability -->
+<section class="slide-section" id="slide7">
+<div class="slide-container s7">
+  <div class="header">
+    <div><div class="slide-title">Explainability and Trusted AI</div><div class="slide-sub">SHAP-based interpretability for transparent risk predictions</div></div>
+    <div style="display:flex;gap:24px;align-items:center;"><div style="text-align:right;"><div style="font-size:clamp(10px,1.2vw,16px);font-weight:600;">Phase 1</div><div style="font-size:clamp(9px,1vw,13px);opacity:0.8;">XGBoost + SHAP</div></div><i class="fas fa-brain" style="font-size:clamp(18px,2.5vw,32px);opacity:0.9;"></i></div>
+  </div>
+  <div class="content">
+    <div class="left-col">
+      <div class="xcard xcard-blue">
+        <div class="card-title"><i class="fas fa-eye" style="color:#4299e1"></i><span>Explainability Techniques Used</span></div>
+        <div class="tech-grid">
+          <div class="tech-item"><i class="fas fa-globe tech-icon"></i><div><div class="tech-name">SHAP Global</div><div class="tech-desc">Model-wide feature importance analysis</div></div></div>
+          <div class="tech-item"><i class="fas fa-user tech-icon"></i><div><div class="tech-name">SHAP Local</div><div class="tech-desc">Individual prediction explanations</div></div></div>
+          <div class="tech-item"><i class="fas fa-chart-bar tech-icon"></i><div><div class="tech-name">Feature Importance</div><div class="tech-desc">Visual ranking of key features</div></div></div>
+          <div class="tech-item"><i class="fas fa-file-alt tech-icon"></i><div><div class="tech-name">Customer Risk</div><div class="tech-desc">Personalized risk explanations</div></div></div>
+        </div>
+      </div>
+      <div class="value-box">
+        <div class="value-title"><i class="fas fa-check-circle"></i><span>Value Addition</span></div>
+        <div class="value-grid">
+          <div class="value-item"><div class="value-lbl">Transparency</div><div class="value-num">95%</div></div>
+          <div class="value-item"><div class="value-lbl">Trust</div><div class="value-num">92%</div></div>
+          <div class="value-item"><div class="value-lbl">Compliance</div><div class="value-num">98%</div></div>
+          <div class="value-item"><div class="value-lbl">Accuracy</div><div class="value-num">94%</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="right-col">
+      <div class="xcard xcard-green">
+        <div class="card-title"><i class="fas fa-list-ol" style="color:#48bb78"></i><span>Top Features Driving Delinquency</span></div>
+        <ul class="feat-list">
+          <li class="feat-item"><i class="fas fa-percentage feat-icon"></i><div class="feat-text"><span class="feat-val">Debt-to-Income Ratio</span> - Primary risk indicator</div></li>
+          <li class="feat-item"><i class="fas fa-credit-card feat-icon"></i><div class="feat-text"><span class="feat-val">Credit Utilization Ratio</span> - Current usage</div></li>
+          <li class="feat-item"><i class="fas fa-exclamation-circle feat-icon"></i><div class="feat-text"><span class="feat-val">Delinquency Score</span> - Historical behavior</div></li>
+          <li class="feat-item"><i class="fas fa-calculator feat-icon"></i><div class="feat-text"><span class="feat-val">Installment Burden</span> - Monthly capacity</div></li>
+          <li class="feat-item"><i class="fas fa-history feat-icon"></i><div class="feat-text"><span class="feat-val">Historical Failed Payments</span> - Failure count</div></li>
+        </ul>
+      </div>
+      <div class="xcard xcard-orange">
+        <div class="card-title"><i class="fas fa-balance-scale" style="color:#ed8936"></i><span>Key Benefits</span></div>
+        <div class="ben-row">
+          <div class="ben-item" style="background:#fffaf0;border:1px solid #fed7aa;"><div class="ben-title" style="color:#744210;">Transparent</div><div class="ben-desc" style="color:#975a16;">AI predictions explained</div></div>
+          <div class="ben-item" style="background:#f0fff4;border:1px solid #9ae6b4;"><div class="ben-title" style="color:#22543d;">Trust</div><div class="ben-desc" style="color:#276749;">Banking professionals</div></div>
+          <div class="ben-item" style="background:#ebf8ff;border:1px solid #90cdf4;"><div class="ben-title" style="color:#2c5282;">Compliance</div><div class="ben-desc" style="color:#2b6cb0;">Regulatory ready</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+<div class="slide-footer">M.Tech - Artificial Intelligence | IIT Jodhpur</div>
+</div>
+</section>
+
+<!-- SLIDE 8: Phase-2 Sequential Model (FIXED) -->
+<section class="slide-section" id="slide8">
+<div class="slide-container dark-slide s8">
+  <div class="bg-pattern"></div>
+  <div class="main">
+    <div class="header-sec">
+      <div><h1 class="title"><span class="title-hl">Phase-2</span> Sequential Model</h1><div class="sub">LSTM-based temporal modeling for capturing evolving customer behavior</div></div>
+      <div style="display:flex;align-items:center;gap:2%;"><span style="font-size:clamp(10px,1.4vw,18px);color:#94a3b8;font-weight:500;">6-month sequence</span><div style="width:12px;height:12px;background:#3b82f6;border-radius:50%;box-shadow:0 0 10px rgba(59,130,246,0.5);"></div></div>
+    </div>
+    <div class="content-grid">
+      <div class="left-col">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-question-circle card-icon"></i><span>Why Phase-2 Was Needed</span></div>
+          <div class="why-grid">
+            <div class="why-item"><div class="why-icon"><i class="fas fa-sync-alt"></i></div><div class="why-text">Behavior Changes</div><div class="why-desc">Customer risk patterns evolve dynamically</div></div>
+            <div class="why-item"><div class="why-icon"><i class="fas fa-chart-line"></i></div><div class="why-text">Evolving Risk</div><div class="why-desc">Static models miss temporal trends</div></div>
+            <div class="why-item"><div class="why-icon"><i class="fas fa-history"></i></div><div class="why-text">Sequential Analysis</div><div class="why-desc">Repayment behavior tracking needed</div></div>
+          </div>
+          <div class="model-details">
+            <div class="model-item"><div class="model-lbl">Model Type</div><div class="model-val">LSTM</div></div>
+            <div class="model-item"><div class="model-lbl">Sequence</div><div class="model-val">6 months</div></div>
+            <div class="model-item"><div class="model-lbl">Features</div><div class="model-val">12</div></div>
+            <div class="model-item"><div class="model-lbl">Hidden Units</div><div class="model-val">128</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-network-wired card-icon"></i><span>LSTM Architecture</span></div>
+          <div class="lstm-visual">
+            <div class="lstm-node"><div class="lstm-label">Input</div></div>
+            <div class="lstm-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="lstm-node"><div class="lstm-label">LSTM Layer 1</div></div>
+            <div class="lstm-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="lstm-node"><div class="lstm-label">LSTM Layer 2</div></div>
+            <div class="lstm-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="lstm-node"><div class="lstm-label">Output</div></div>
+          </div>
+          <div class="seq-info"><div class="seq-text">Captures <span class="seq-hl">temporal dependencies</span> in customer behavior over 6-month periods, analyzing sequential patterns in repayment history and credit utilization.</div></div>
+        </div>
+      </div>
+      <div class="right-col">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-list-check card-icon"></i><span>Sequence Features</span></div>
+          <div class="feat-grid">
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-chart-bar"></i></div><div><div class="feat-text">Delinquency Score</div><div class="feat-desc">Risk indicator</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-percentage"></i></div><div><div class="feat-text">Credit Utilization</div><div class="feat-desc">Usage ratio</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-percent"></i></div><div><div class="feat-text">Interest Rate</div><div class="feat-desc">Annual rate</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-search"></i></div><div><div class="feat-text">Recent Inquiry</div><div class="feat-desc">Credit checks</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-history"></i></div><div><div class="feat-text">Failed Payments</div><div class="feat-desc">Historical data</div></div></div>
+            <div class="feat-item"><div class="feat-icon"><i class="fas fa-money-bill-wave"></i></div><div><div class="feat-text">Payment Amount</div><div class="feat-desc">Monthly payment</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-cogs card-icon"></i><span>Key Metrics</span></div>
+          <div class="key-metrics">
+            <div class="km-row"><div class="km-labels"><span class="km-lbl">Sequence Length</span><span class="km-val" style="color:#3b82f6;">6 months</span></div><div class="km-bar"><div class="km-fill" style="background:#3b82f6;width:100%;"></div></div></div>
+            <div class="km-row"><div class="km-labels"><span class="km-lbl">Input Features</span><span class="km-val" style="color:#10b981;">12</span></div><div class="km-bar"><div class="km-fill" style="background:#10b981;width:85%;"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<div class="slide-footer">M.Tech - Artificial Intelligence | IIT Jodhpur</div>
+</div>
+</section>
+
+<!-- SLIDE 9: Hybrid Framework -->
+<section class="slide-section" id="slide9">
+<div class="slide-container dark-slide s9">
+  <div class="bg-pattern"></div>
+  <div class="main">
+    <div class="header-sec">
+      <div><h1 class="title"><span class="title-hl">Phase-2</span> Results and Hybrid Framework</h1><div class="sub">LSTM model performance and hybrid risk scoring system</div></div>
+      <div style="display:flex;align-items:center;gap:2%;"><span style="font-size:clamp(9px,1vw,14px);color:#94a3b8;">Model Status:</span><div class="status-badge"><div class="status-dot"></div><span>Trained Successfully</span></div></div>
+    </div>
+    <div class="content-grid">
+      <div class="left-col">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-line card-icon"></i><span>LSTM Model Performance</span></div>
+          <div class="metrics-row">
+            <div class="metric-card"><div class="metric-val">47.3%</div><div class="metric-lbl">Accuracy</div><div class="metric-chg"><i class="fas fa-arrow-up"></i> +5.2%</div></div>
+            <div class="metric-card"><div class="metric-val">62.1%</div><div class="metric-lbl">Recall</div><div class="metric-chg"><i class="fas fa-arrow-up"></i> +8.3%</div></div>
+            <div class="metric-card"><div class="metric-val">16.0%</div><div class="metric-lbl">Precision</div><div class="metric-chg"><i class="fas fa-arrow-up"></i> +2.1%</div></div>
+            <div class="metric-card"><div class="metric-val">25.5%</div><div class="metric-lbl">F1-Score</div><div class="metric-chg"><i class="fas fa-arrow-up"></i> +4.5%</div></div>
+            <div class="metric-card"><div class="metric-val">53.5%</div><div class="metric-lbl">AUC</div><div class="metric-chg"><i class="fas fa-arrow-up"></i> +6.2%</div></div>
+          </div>
+          <div class="hybrid-sec">
+            <div class="hybrid-title"><i class="fas fa-puzzle-piece"></i><span>Hybrid Framework Formula</span></div>
+            <div class="hybrid-formula"><span style="color:#3b82f6;font-weight:600;">Final Hybrid Risk Score</span> = <span style="color:#10b981;">0.7</span> × <span style="color:#f59e0b;">XGBoost Risk</span> + <span style="color:#10b981;">0.3</span> × <span style="color:#f59e0b;">LSTM Risk</span></div>
+            <div class="hybrid-benefits">
+              <div class="benefit-item"><i class="fas fa-check-circle"></i><span><strong>High Accuracy:</strong><br/>XGBoost provides 93.9%</span></div>
+              <div class="benefit-item"><i class="fas fa-check-circle"></i><span><strong>Temporal Insights:</strong><br/>LSTM captures behavior</span></div>
+              <div class="benefit-item"><i class="fas fa-check-circle"></i><span><strong>Balanced Scoring:</strong><br/>70/30 optimal weight</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="right-col">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-info-circle card-icon"></i><span>Hybrid Model Benefits</span></div>
+          <div style="display:flex;flex-direction:column;gap:3%;">
+            <div class="detail-row"><span class="detail-lbl">XGBoost Weight</span><span class="detail-val">70%</span></div>
+            <div class="detail-row"><span class="detail-lbl">LSTM Weight</span><span class="detail-val">30%</span></div>
+            <div class="detail-row"><span class="detail-lbl">Combined AUC</span><span class="detail-val" style="color:#10b981;">91.6%</span></div>
+            <div class="detail-row" style="border:none;"><span class="detail-lbl">Combined Recall</span><span class="detail-val" style="color:#10b981;">90.3%</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-pie card-icon"></i><span>Risk Distribution</span></div>
+          <div class="risk-row"><div class="risk-labels"><span class="risk-lbl">High Risk</span><span class="risk-val" style="color:#ef4444;">15%</span></div><div class="prog-bar"><div class="prog-fill" style="background:#ef4444;width:15%;"></div></div></div>
+          <div class="risk-row"><div class="risk-labels"><span class="risk-lbl">Medium Risk</span><span class="risk-val" style="color:#f59e0b;">25%</span></div><div class="prog-bar"><div class="prog-fill" style="background:#f59e0b;width:25%;"></div></div></div>
+          <div class="risk-row" style="margin-bottom:0;"><div class="risk-labels"><span class="risk-lbl">Low Risk</span><span class="risk-val" style="color:#10b981;">60%</span></div><div class="prog-bar"><div class="prog-fill" style="background:#10b981;width:60%;"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+<div class="slide-footer">M.Tech - Artificial Intelligence | IIT Jodhpur</div>
+</div>
+</section>
+
+<!-- SLIDE 10: Dashboard & Impact -->
+<section class="slide-section" id="slide10">
+<div class="slide-container dark-slide s10">
+  <div class="bg-pattern"></div>
+  <div class="main">
+    <div class="header-sec">
+      <div><h1 class="title"><span class="title-hl">Dashboard</span> and Impact</h1><div class="sub">Interactive banking dashboard for risk prediction and monitoring</div></div>
+      <div style="display:flex;align-items:center;gap:2%;"><span style="font-size:clamp(9px,1vw,14px);color:#94a3b8;">System Status:</span><div style="display:flex;align-items:center;gap:8px;background:rgba(16,185,129,0.1);padding:0.5% 1.5%;border-radius:20px;border:1px solid rgba(16,185,129,0.2);"><div class="status-dot"></div><span style="font-size:clamp(9px,1.1vw,14px);color:#10b981;font-weight:600;">Active</span></div></div>
+    </div>
+    <div class="content-grid">
+      <div class="left-col">
+        <div class="card" style="flex:1;">
+          <div class="card-title"><i class="fas fa-desktop card-icon"></i><span>Dashboard Features</span></div>
+          <div class="dash-grid">
+            <div class="dash-item"><div class="dash-icon"><i class="fas fa-upload"></i></div><div class="dash-text">Upload banking dataset</div></div>
+            <div class="dash-item"><div class="dash-icon"><i class="fas fa-chart-line"></i></div><div class="dash-text">Predict delinquency risk</div></div>
+            <div class="dash-item"><div class="dash-icon"><i class="fas fa-brain"></i></div><div class="dash-text">XGBoost, LSTM, Hybrid scores</div></div>
+            <div class="dash-item"><div class="dash-icon"><i class="fas fa-eye"></i></div><div class="dash-text">SHAP explainability plots</div></div>
+            <div class="dash-item"><div class="dash-icon"><i class="fas fa-bell"></i></div><div class="dash-text">Early warning alerts</div></div>
+            <div class="dash-item"><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-text">Risk segmentation</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="mid-col">
+        <div class="card" style="flex:1;">
+          <div class="card-title"><i class="fas fa-chart-bar card-icon"></i><span>Impact of the Project</span></div>
+          <div class="impact-grid">
+            <div class="impact-item"><div class="impact-header"><i class="fas fa-money-bill-wave impact-icon"></i><span class="impact-title">Reduces NPAs</span></div><div class="impact-text">Improves loan recovery rates</div><div class="prog-bar"><div class="prog-fill" style="width:75%;"></div></div></div>
+            <div class="impact-item"><div class="impact-header"><i class="fas fa-hand-holding-medical impact-icon"></i><span class="impact-title">Early Intervention</span></div><div class="impact-text">Prevents defaults proactively</div><div class="prog-bar"><div class="prog-fill" style="width:85%;"></div></div></div>
+            <div class="impact-item"><div class="impact-header"><i class="fas fa-eye impact-icon"></i><span class="impact-title">Transparency</span></div><div class="impact-text">Enhances trust in AI decisions</div><div class="prog-bar"><div class="prog-fill" style="width:90%;"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<div class="slide-footer">M.Tech - Artificial Intelligence | IIT Jodhpur</div>
+</div>
+</section>
+
+</div>
+
+<script>
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('.slide-section');
+const navLinks = document.querySelectorAll('.slide-nav a');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const link = document.querySelector(`.slide-nav a[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { threshold: 0.3 });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
