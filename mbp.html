@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Issue Predictor and Analyser — Presentation</title>
+    <style>
+        /* ── Reset & Base ───────────────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 18px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0b0f19;
+            color: #e2e8f0;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ── Slide Container ────────────────────────────────────── */
+        .deck {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 80px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .5s ease, transform .5s ease;
+            transform: translateX(40px);
+            text-align: center;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0);
+        }
+
+        /* ── Typography ─────────────────────────────────────────── */
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: .4em;
+        }
+
+        h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #93c5fd;
+            margin-bottom: .5em;
+            letter-spacing: -0.02em;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #c4b5fd;
+            margin-bottom: .4em;
+        }
+
+        p,
+        li {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #cbd5e1;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            max-width: 700px;
+            margin: 0 auto .6em;
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: .75rem;
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: 50px;
+            margin: 4px;
+            background: rgba(96, 165, 250, .15);
+            color: #60a5fa;
+            border: 1px solid rgba(96, 165, 250, .3);
+        }
+
+        .tag.purple {
+            background: rgba(167, 139, 250, .15);
+            color: #a78bfa;
+            border-color: rgba(167, 139, 250, .3);
+        }
+
+        .tag.pink {
+            background: rgba(244, 114, 182, .15);
+            color: #f472b6;
+            border-color: rgba(244, 114, 182, .3);
+        }
+
+        .tag.green {
+            background: rgba(52, 211, 153, .15);
+            color: #34d399;
+            border-color: rgba(52, 211, 153, .3);
+        }
+
+        .tag.amber {
+            background: rgba(251, 191, 36, .15);
+            color: #fbbf24;
+            border-color: rgba(251, 191, 36, .3);
+        }
+
+        /* ── Layout helpers ─────────────────────────────────────── */
+        .content {
+            max-width: 1100px;
+            width: 100%;
+            text-align: left;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 24px;
+        }
+
+        /* ── Cards ──────────────────────────────────────────────── */
+        .card {
+            background: rgba(30, 41, 59, .7);
+            border: 1px solid rgba(148, 163, 184, .12);
+            border-radius: 16px;
+            padding: 28px 24px;
+            backdrop-filter: blur(12px);
+            transition: transform .25s, border-color .25s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(96, 165, 250, .35);
+        }
+
+        .card .icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .card h3 {
+            margin-bottom: 8px;
+        }
+
+        .card p,
+        .card li {
+            font-size: .95rem;
+            color: #94a3b8;
+        }
+
+        /* ── Lists ──────────────────────────────────────────────── */
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            position: relative;
+            padding-left: 1.6em;
+            margin-bottom: .55em;
+        }
+
+        ul li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #60a5fa;
+            font-weight: 700;
+        }
+
+        /* ── Table ──────────────────────────────────────────────── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .92rem;
+            margin-top: 10px;
+        }
+
+        th {
+            text-align: left;
+            padding: 10px 14px;
+            font-weight: 700;
+            background: rgba(96, 165, 250, .12);
+            color: #93c5fd;
+            border-bottom: 2px solid rgba(96, 165, 250, .25);
+        }
+
+        td {
+            padding: 9px 14px;
+            border-bottom: 1px solid rgba(148, 163, 184, .1);
+            color: #cbd5e1;
+        }
+
+        tr:hover td {
+            background: rgba(96, 165, 250, .05);
+        }
+
+        /* ── Severity badges ────────────────────────────────────── */
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-size: .78rem;
+            font-weight: 700;
+        }
+
+        .badge.critical {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .badge.high {
+            background: #78350f;
+            color: #fcd34d;
+        }
+
+        .badge.medium {
+            background: #1e3a5f;
+            color: #93c5fd;
+        }
+
+        .badge.low {
+            background: #064e3b;
+            color: #6ee7b7;
+        }
+
+        .badge.info {
+            background: #1e293b;
+            color: #94a3b8;
+        }
+
+        /* ── Code block ─────────────────────────────────────────── */
+        .code-block {
+            background: #1e293b;
+            border: 1px solid rgba(148, 163, 184, .12);
+            border-radius: 10px;
+            padding: 18px 22px;
+            font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+            font-size: .88rem;
+            line-height: 1.7;
+            color: #e2e8f0;
+            text-align: left;
+            overflow-x: auto;
+            white-space: pre;
+            margin-top: 12px;
+        }
+
+        .code-block .kw {
+            color: #c084fc;
+        }
+
+        .code-block .str {
+            color: #34d399;
+        }
+
+        .code-block .cmt {
+            color: #64748b;
+        }
+
+        .code-block .fn {
+            color: #60a5fa;
+        }
+
+        /* ── Flow diagram ───────────────────────────────────────── */
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .flow-box {
+            background: rgba(30, 41, 59, .85);
+            border: 1px solid rgba(96, 165, 250, .25);
+            border-radius: 12px;
+            padding: 16px 22px;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .flow-box .label {
+            font-size: .82rem;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .flow-box .value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: #475569;
+            margin: 0 6px;
+        }
+
+        /* ── Risk gauge ─────────────────────────────────────────── */
+        .gauge-wrap {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 20px 0;
+        }
+
+        .gauge {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            position: relative;
+        }
+
+        .gauge.low {
+            background: conic-gradient(#34d399 0% 20%, #1e293b 20%);
+        }
+
+        .gauge.medium {
+            background: conic-gradient(#60a5fa 0% 40%, #1e293b 40%);
+        }
+
+        .gauge.high {
+            background: conic-gradient(#fbbf24 0% 65%, #1e293b 65%);
+        }
+
+        .gauge.critical {
+            background: conic-gradient(#ef4444 0% 90%, #1e293b 90%);
+        }
+
+        .gauge-inner {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .gauge-inner .score {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .gauge-inner .label {
+            font-size: .65rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        /* ── Navigation ─────────────────────────────────────────── */
+        .nav {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 14px;
+            z-index: 100;
+            background: rgba(15, 23, 42, .85);
+            backdrop-filter: blur(10px);
+            padding: 10px 24px;
+            border-radius: 50px;
+            border: 1px solid rgba(148, 163, 184, .12);
+        }
+
+        .nav button {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 6px 16px;
+            border-radius: 8px;
+            transition: all .2s;
+        }
+
+        .nav button:hover {
+            background: rgba(96, 165, 250, .15);
+            color: #60a5fa;
+        }
+
+        .nav .counter {
+            color: #64748b;
+            font-size: .85rem;
+            display: flex;
+            align-items: center;
+        }
+
+        /* ── Progress bar ───────────────────────────────────────── */
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            z-index: 200;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
+            transition: width .4s ease;
+        }
+
+        /* ── Decorative blobs ───────────────────────────────────── */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: .12;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .blob-1 {
+            width: 600px;
+            height: 600px;
+            background: #3b82f6;
+            top: -200px;
+            right: -150px;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: #8b5cf6;
+            bottom: -180px;
+            left: -120px;
+        }
+
+        .blob-3 {
+            width: 400px;
+            height: 400px;
+            background: #ec4899;
+            top: 40%;
+            left: 50%;
+        }
+
+        /* ── Slide number badge ─────────────────────────────────── */
+        .slide-num {
+            position: absolute;
+            top: 28px;
+            right: 40px;
+            font-size: .72rem;
+            font-weight: 700;
+            color: #475569;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        /* ── Responsive ─────────────────────────────────────────── */
+        @media (max-width: 900px) {
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .slide {
+                padding: 30px 24px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            h2 {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Decorative blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    <!-- Progress bar -->
+    <div class="progress" id="progress"></div>
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE DECK                                                  -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div class="deck" id="deck">
+        <!-- ──────────── SLIDE 1 — Title ──────────── -->
+        <div class="slide active" data-slide="0">
+            <div style="margin-bottom: 16px;">
+                <span class="tag">Performance</span>
+                <span class="tag purple">AI-Powered</span>
+                <span class="tag pink">Anomaly Detection</span>
+            </div>
+            <h1>Predictive analysis and alerting for MBP Production issues</h1>
+            <p class="subtitle">
+                An intelligent analysis layer that detects performance anomalies in trace exports using a two-layer engine — rule-based + LLM — and produces professional, actionable reports.
+            </p>
+            <div style="margin-top: 30px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                <span class="tag green">Python 3.10+</span>
+                <span class="tag">Flask Dashboard</span>
+                <span class="tag purple">GPT-4o Ready</span>
+                <span class="tag amber">20+ Detection Patterns</span>
+            </div>
+            <div class="slide-num">01 / 12</div>
+        </div>
+        <!-- ──────────── SLIDE 2 — Problem Statement ──────────── -->
+        <div class="slide" data-slide="1">
+            <div class="content">
+                <h2>The Problem</h2>
+                <div class="grid-2" style="margin-top: 20px;">
+                    <div class="card">
+                        <span class="icon">⏱️</span>
+                        <h3>Manual Trace Analysis</h3>
+                        <p>Glowroot produces rich trace data, but reviewing exports manually is slow and error-prone — analysts must sift through nested call trees, SQL queries, and timer breakdowns.</p>
+                    </div>
+                    <div class="card">
+                        <span class="icon">🔍</span>
+                        <h3>Hidden Anomalies</h3>
+                        <p>Critical patterns like N+1 queries, connection pool exhaustion, and subtle CPU bottlenecks are easy to miss without systematic, automated checks.</p>
+                    </div>
+                    <div class="card">
+                        <span class="icon">📊</span>
+                        <h3>No Risk Quantification</h3>
+                        <p>Raw traces don't provide a single risk score or prioritised finding list — teams lack a clear "how bad is it?" answer for go/no-go decisions.</p>
+                    </div>
+                    <div class="card">
+                        <span class="icon">🔄</span>
+                        <h3>Slow Feedback Loop</h3>
+                        <p>Without CI/CD integration, performance regressions are caught late — often only after production incidents, not at the pull-request or staging phase.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-num">02 / 12</div>
+        </div>
+        <!-- ──────────── SLIDE 3 — Solution Overview ──────────── -->
+        <div class="slide" data-slide="2">
+            <div class="content">
+                <h2>Our Solution</h2>
+                <p class="subtitle" style="text-align:left; max-width:100%;">
+                    A fully automated pipeline that parses, analyzes, scores, and reports — in seconds.
+                </p>
+                <div class="flow" style="margin: 30px 0;">
+                    <div class="flow-box">
+                        <div class="label">Input</div>
+                        <div class="value">HTML Export / Live Logs</div>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-box">
+                        <div class="label">Step 1</div>
+                        <div class="value">Parse</div>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-box" style="border-color: rgba(167,139,250,.4);">
+                        <div class="label">Step 2</div>
+                        <div class="value">Rule Engine</div>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-box" style="border-color: rgba(244,114,182,.4);">
+                        <div class="label">Step 3</div>
+                        <div class="value">LLM Analysis</div>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-box" style="border-color: rgba(251,191,36,.4);">
+                        <div class="label">Step 4</div>
+                        <div class="value">Risk Score</div>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-box" style="border-color: rgba(52,211,153,.4);">
+                        <div class="label">Step 5</div>
+                        <div class="value">Report</div>
+                    </div>
+                </div>
+                <div class="grid-3" style="margin-top: 20px;">
+                    <div class="card" style="text-align:center;">
+                        <span class="icon">🖥️</span>
+                        <h3>CLI</h3>
+                        <p>Analyse single files or entire directories from the command line</p>
+                    </div>
+                    <div class="card" style="text-align:center;">
+                        <span class="icon">🌐</span>
+                        <h3>Web Dashboard</h3>
+                        <p>Drag-and-drop Flask UI with dark-mode design</p>
+                    </div>
+                    <div class="card" style="text-align:center;">
+                        <span class="icon">📡</span>
+                        <h3>Live Monitor</h3>
+                        <p>Polls Glowroot API every 30 s for real-time alerting</p>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-num">03 / 12</div>
+        </div>
+        <!-- ──────────── SLIDE 4 — Architecture ──────────── -->
+        <div class="slide" data-slide="3">
+            <div class="content">
+                <h2>Architecture Overview</h2>
+                <div class="grid-2" style="margin-top: 16px;">
+                    <div>
+                        <h3 style="margin-bottom: 14px;">Input Sources</h3>
+                        <ul>
+                            <li><strong>HTML Export</strong> — CLI upload of Glowroot trace files</li>
+                            <li><strong>Dashboard</strong> — Drag-and-drop via Flask web UI</li>
+                            <li><strong>Live API</strong> — Polling Glowroot REST endpoints</li>
+                        </ul>
+                        <h3 style="margin-top: 24px; margin-bottom: 14px;">Output Formats</h3>
+                        <ul>
+                            <li><strong>HTML Report</strong> — Professional styled visual report</li>
+                            <li><strong>JSON</strong> — Machine-readable for CI/CD pipelines</li>
+                            <li><strong>Markdown</strong> — For wikis, GitHub issues, code reviews</li>
+                            <li><strong>Console</strong> — Coloured CLI summary</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 14px;">Module Map</h3>
+                        <div class="code-block" style="font-size: .82rem; line-height: 1.6;">glowroot-ai-predictor/
+                            ├── <span class="fn">main.py</span> <span class="cmt"># CLI entry</span>
+                            ├── <span class="str">config.yaml</span> <span class="cmt"># All config</span>
+                            ├── parser/
+                            │ └── <span class="fn">html_parser.py</span> <span class="cmt"># HTML → TraceData</span>
+                            ├── analyzer/
+                            │ ├── <span class="fn">rule_engine.py</span> <span class="cmt"># Layer 1</span>
+                            │ └── <span class="fn">llm_analyzer.py</span> <span class="cmt"># Layer 2</span>
+                            ├── reports/
+                            │ └── <span class="fn">generator.py</span> <span class="cmt"># Report output</span>
+                            ├── integrations/
+                            │ └── <span class="fn">glowroot_client.py</span>
+                            └── dashboard/
+                            └── <span class="fn">app.py</span> <span class="cmt"># Flask UI</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-num">04 / 12</div>
+        </div>
+        <!-- ──────────── SLIDE 5 — Two-Layer Engine ──────────── -->
+        <div class="slide" data-slide="4">
+            <div class="content">
+                <h2>Two-Layer Analysis Engine</h2>
+                <div class="grid-2" style="margin-top: 20px;">
+                    <div class="card">
+                        <span class="icon">⚙️</span>
+                        <h3>Layer 1 — Rule Engine</h3>
+                        <span class="tag green">Always On</span> <span class="tag">Deterministic</span>
+                        <ul style="margin-top: 16px;">
+                            <li>20+ detection patterns</li>
+                            <li>No external dependencies</li>
+                            <li>Response time, SQL, error, JVM, concurrency checks</li>
+                            <li>Pattern matching on N+1 queries, SELECT *, leading wildcards</li>
+                            <li>Timer & entry bottleneck analysis</li>
+                            <li>Configurable thresholds via <code style="color:#a78bfa;">config.yaml</code></li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <span class="icon">🧠</span>
+                        <h3>Layer 2 — LLM Analyzer</h3>
+                        <span class="tag purple">Optional</span> <span class="tag pink">AI-Powered</span>
+                        <ul style="margin-top: 16px;">
+                            <li>Root-cause analysis & scaling predictions</li>
+                            <li>Architecture concerns & concurrency issues</li>
+                            <li>Java / Spring Boot code fix suggestions</li>
+                            <li>Structured prompt with trace summary + Layer 1 findings</li>
+                            <li>Providers: GitHub Copilot, OpenAI, Azure OpenAI</li>
+                            <li>Graceful fallback: <code style="color:#a78bfa;">provider: "none"</code></li>
+                        </ul>
+                    </div>
+                </div>
+                <p style="margin-top: 20px; text-align: center; color: #94a3b8; font-size: .9rem;">
+                    When no LLM is configured the pipeline continues with rule-based findings only — zero degradation in core detection.
+                </p>
+            </div>
+            <div class="slide-num">05 / 12</div>
+        </div>
+        <!-- ──────────── SLIDE 6 — Detection Patterns ──────────── -->
+        <div class="slide" data-slide="5">
+            <div class="content">
+                <h2>Detection Patterns (Layer 1)</h2>
+                <div style="overflow-y: auto; max-height: 65vh;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Pattern</th>
+                                <th>Severity</th>
+                                <th>Trigger</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Critical response time</td>
+                                <td><span class="badge critical">CRITICAL</span></td>
+                                <td>Duration &gt; 10 s</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Slow response time</td>
+                                <td><span class="badge high">HIGH</span></td>
+                                <td>Duration &gt; 3 s</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Transaction errors</td>
+                                <td><span class="badge critical">CRITICAL</span></td>
+                                <td>Timeout, OOM, deadlock, NPE, SQL, pool exhaustion</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Slow SQL query</td>
+                                <td><span class="badge high">HIGH</span></td>
+                                <td>Query &gt; 1 s</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Very slow SQL query</td>
+                                <td><span class="badge critical">CRITICAL</span></td>
+                                <td>Query &gt; 5 s</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>Excessive data fetch</td>
+                                <td><span class="badge high">HIGH</span></td>
+                                <td>Rows &gt; 10,000</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>N+1 query problem</td>
+                                <td><span class="badge critical">CRITICAL</span></td>
+                                <td>Same query ≥ 10 times</td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>Deep call stack</td>
+                                <td><span class="badge medium">MEDIUM</span></td>
+                                <td>Depth &gt; 50</td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>Excessive trace entries</td>
+                                <td><span class="badge high">HIGH</span></td>
+                                <td>Entries &gt; 1,000</td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td>Timer bottleneck</td>
+                                <td><span class="badge high">HIGH</span></td>
+                                <td>Single timer &gt; 80% of duration</td>
+                            </tr>
+                            <tr>
+                                <td>11</td>
+                                <td>Single entry bottleneck</td>
+                                <td><span class="badge high">HIGH</span></td>
+                                <td>One entry &gt; 80% of duration</td>
+                            </tr>
+                            <tr>
+                                <td>12</td>
+                                <td>Connection pool pressure</td>
+                                <td><span class="badge high">HIGH</span></td>
+                                <td>Multiple short waits on pool</td>
+                            </tr>
+                            <tr>
+                                <td>13</td>
+                                <td>I/O-bound transaction</td>
+                                <td><span class="badge medium">MEDIUM</span></td>
+                                <td>CPU &lt; 10% of wall time</td>
+                            </tr>
+                            <tr>
+                                <td>14</td>
+                                <td>CPU-intensive transaction</td>
+                                <td><span class="badge high">HIGH</span></td>
+                                <td>CPU &gt; 90% of wall time</td>
+                            </tr>
+                            <tr>
+                                <td>15</td>
+                                <td>SELECT * anti-pattern</td>
+                                <td><span class="badge medium">MEDIUM</span></td>
+                                <td>Detected in SQL text</td>
+                            </tr>
+                            <tr>
+                                <td>16</td>
+                                <td>Leading wildcard LIKE</td>
+                                <td><span class="badge medium">MEDIUM</span></td>
+                                <td>LIKE '%...' in SQL</td>
+                            </tr>
+                            <tr>
+                                <td>17</td>
+                                <td>Missing index inference</td>
+                                <td><span class="badge medium">MEDIUM</span></td>
+                                <td>Full table scan indicators</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="slide-num">06 / 12</div>
+        </div>
+        <!-- ──────────── SLIDE 7 — Risk Scoring ──────────── -->
+        <div class="slide" data-slide="6">
+            <div class="content">
+                <h2>Risk Scoring Model</h2>
+                <p style="margin-bottom: 20px; color: #94a3b8;">
+                    Every finding is scored: <strong style="color:#e2e8f0;">severity weight × confidence</strong>, summed and capped at 100.
+                </p>
+                <div class="grid-2">
+                    <div>
+                        <h3>Severity Weights</h3>
+                        <table style="margin-top: 10px;">
+                            <thead>
+                                <tr>
+                                    <th>Severity</th>
+                                    <th>Weight</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="badge critical">CRITICAL</span></td>
+                                    <td style="font-weight:700;">25</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge high">HIGH</span></td>
+                                    <td style="font-weight:700;">15</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge medium">MEDIUM</span></td>
+                                    <td style="font-weight:700;">8</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge low">LOW</span></td>
+                                    <td style="font-weight:700;">3</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge info">INFO</span></td>
+                                    <td style="font-weight:700;">1</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <h3>Risk Level Mapping</h3>
+                        <div class="gauge-wrap" style="margin-top: 20px;">
+                            <div>
+                                <div class="gauge low">
+                                    <div class="gauge-inner"><span class="score" style="color:#34d399;">20</span><span class="label">LOW</span></div>
+                                </div>
+                                <p style="text-align:center; margin-top:8px; font-size:.82rem;">0 – 24</p>
+                            </div>
+                            <div>
+                                <div class="gauge medium">
+                                    <div class="gauge-inner"><span class="score" style="color:#60a5fa;">35</span><span class="label">MEDIUM</span></div>
+                                </div>
+                                <p style="text-align:center; margin-top:8px; font-size:.82rem;">25 – 44</p>
+                            </div>
+                            <div>
+                                <div class="gauge high">
+                                    <div class="gauge-inner"><span class="score" style="color:#fbbf24;">58</span><span class="label">HIGH</span></div>
+                                </div>
+                                <p style="text-align:center; margin-top:8px; font-size:.82rem;">45 – 69</p>
+                            </div>
+                            <div>
+                                <div class="gauge critical">
+                                    <div class="gauge-inner"><span class="score" style="color:#ef4444;">92</span><span class="label">CRITICAL</span></div>
+                                </div>
+                                <p style="text-align:center; margin-top:8px; font-size:.82rem;">70 – 100</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-num">07 / 12</div>
+        </div>
+        <!-- ──────────── SLIDE 8 — Report Formats ──────────── -->
+        <div class="slide" data-slide="7">
+            <div class="content">
+                <h2>Report Formats</h2>
+                <div class="grid-3" style="margin-top: 20px;">
+                    <div class="card">
+                        <span class="icon">📄</span>
+                        <h3>HTML Report</h3>
+                        <ul>
+                            <li>Gradient header with trace metadata</li>
+                            <li>Summary cards & risk gauge</li>
+                            <li>AI prediction narrative</li>
+                            <li>Severity-coloured finding cards</li>
+                            <li>Evidence, impact & remedy sections</li>
+                            <li>Embedded Java code suggestions</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <span class="icon">{ }</span>
+                        <h3>JSON Report</h3>
+                        <ul>
+                            <li>Machine-readable structure</li>
+                            <li>Risk score, level, counts</li>
+                            <li>Full finding details</li>
+                            <li>Perfect for CI/CD gates</li>
+                            <li>Automated dashboard integration</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <span class="icon">📝</span>
+                        <h3>Markdown Report</h3>
+                        <ul>
+                            <li>Structured headers & badges</li>
+                            <li>Fenced code blocks</li>
+                            <li>GitHub Issues / wiki friendly</li>
+                            <li>Code review annotations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-num">08 / 12</div>
+        </div>
+        <!-- ──────────── SLIDE 9 — Dashboard & API ──────────── -->
+        <div class="slide" data-slide="8">
+            <div class="content">
+                <h2>Web Dashboard & REST API</h2>
+                <div class="grid-2" style="margin-top: 20px;">
+                    <div>
+                        <h3>Dashboard Features</h3>
+                        <ul style="margin-top: 12px;">
+                            <li>Dark-mode Flask web UI</li>
+                            <li>Drag-and-drop file upload (50 MB limit)</li>
+                            <li>Instant HTML or JSON analysis response</li>
+                            <li>Feature cards & health check endpoint</li>
+                        </ul>
+                        <h3 style="margin-top: 28px;">API Endpoints</h3>
+                        <table style="margin-top: 10px;">
+                            <thead>
+                                <tr>
+                                    <th>Route</th>
+                                    <th>Method</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code style="color:#60a5fa;">/</code></td>
+                                    <td>GET</td>
+                                    <td>Upload interface</td>
+                                </tr>
+                                <tr>
+                                    <td><code style="color:#60a5fa;">/api/analyze</code></td>
+                                    <td>POST</td>
+                                    <td>Upload → HTML report</td>
+                                </tr>
+                                <tr>
+                                    <td><code style="color:#60a5fa;">/api/analyze/json</code></td>
+                                    <td>POST</td>
+                                    <td>Upload → JSON report</td>
+                                </tr>
+                                <tr>
+                                    <td><code style="color:#60a5fa;">/api/health</code></td>
+                                    <td>GET</td>
+                                    <td>Health check</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <h3>Quick cURL Examples</h3>
+                        <div class="code-block" style="font-size: .8rem;"><span class="cmt"># Get HTML report</span>
+                            curl -X POST \
+                            -F <span class="str">"file=@trace.html"</span> \
+                            http://localhost:5050/api/analyze \
+                            -o report.html
+                            <span class="cmt"># Get JSON report</span>
+                            curl -X POST \
+                            -F <span class="str">"file=@trace.html"</span> \
+                            http://localhost:5050/api/analyze/json
+                            <span class="cmt"># Health check</span>
+                            curl http://localhost:5050/api/health
+                            <span class="cmt"># → {"status": "ok"}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-num">09 / 12</div>
+        </div>
+        <!-- ──────────── SLIDE 10 — CI/CD Integration ──────────── -->
+        <div class="slide" data-slide="9">
+            <div class="content">
+                <h2>CI/CD Pipeline Integration</h2>
+                <p style="margin-bottom: 20px; color:#94a3b8;">Block deployments automatically when risk score exceeds threshold.</p>
+                <div class="grid-2">
+                    <div>
+                        <h3>GitHub Actions Example</h3>
+                        <div class="code-block" style="font-size: .8rem;"><span class="cmt"># .github/workflows/perf-gate.yml</span>
+                            - <span class="kw">name</span>: Analyze Glowroot Traces
+                            <span class="kw">run</span>: |
+                            RESULT=$(curl -s -X POST \
+                            http://predictor:5050/api/analyze/json \
+                            -F <span class="str">"file=@glowroot-trace.html"</span>)
+                            RISK=$(echo $RESULT | jq <span class="str">'.risk_score'</span>)
+                            <span class="kw">if</span> [ $(echo <span class="str">"$RISK > 70"</span> | bc) -eq 1 ]; <span class="kw">then</span>
+                            echo <span class="str">"❌ CRITICAL risk: $RISK"</span>
+                            exit 1
+                            <span class="kw">fi</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Gate Thresholds</h3>
+                        <div style="margin-top: 14px;">
+                            <div class="card" style="padding: 16px 20px; margin-bottom: 12px; border-left: 4px solid #34d399;">
+                                <strong style="color:#34d399;">Score 0–24</strong> — <span style="color:#94a3b8;">Deploy freely</span>
+                            </div>
+                            <div class="card" style="padding: 16px 20px; margin-bottom: 12px; border-left: 4px solid #60a5fa;">
+                                <strong style="color:#60a5fa;">Score 25–44</strong> — <span style="color:#94a3b8;">Deploy with warnings logged</span>
+                            </div>
+                            <div class="card" style="padding: 16px 20px; margin-bottom: 12px; border-left: 4px solid #fbbf24;">
+                                <strong style="color:#fbbf24;">Score 45–69</strong> — <span style="color:#94a3b8;">Require manual approval</span>
+                            </div>
+                            <div class="card" style="padding: 16px 20px; border-left: 4px solid #ef4444;">
+                                <strong style="color:#ef4444;">Score 70–100</strong> — <span style="color:#94a3b8;">Block deployment automatically</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-num">10 / 12</div>
+        </div>
+        <!-- ──────────── SLIDE 11 — Getting Started ──────────── -->
+        <div class="slide" data-slide="10">
+            <div class="content">
+                <h2>Getting Started</h2>
+                <div class="grid-2" style="margin-top: 20px;">
+                    <div>
+                        <h3>Prerequisites</h3>
+                        <ul>
+                            <li>Python 3.10+</li>
+                            <li>Gemini / OpenAI / Azure OpenAI API key</li>
+                        </ul>
+                        <h3 style="margin-top: 24px;">Install & Run</h3>
+                        <div class="code-block" style="font-size: .82rem;"><span class="cmt"># Install dependencies</span>
+                            <span class="fn">cd</span> ai-predictor
+                            <span class="fn">pip install</span> -r requirements.txt
+                            <span class="cmt"># Analyze a trace (HTML report)</span>
+                            <span class="fn">python</span> main.py analyze trace.html
+                            <span class="cmt"># Analyze with JSON output</span>
+                            <span class="fn">python</span> main.py analyze trace.html --format json
+                            <span class="cmt"># Batch analyze a directory</span>
+                            <span class="fn">python</span> main.py analyze ./exports/
+                            <span class="cmt"># Start the web dashboard</span>
+                            <span class="fn">python</span> main.py dashboard
+                            <span class="cmt"># Live monitoring</span>
+                            <span class="fn">python</span> main.py monitor
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Configuration Highlights</h3>
+                        <div class="code-block" style="font-size: .8rem;"><span class="cmt"># config.yaml</span>
+                            <span class="kw">thresholds</span>:
+                            response_time:
+                            warning_ms: <span class="str">3000</span>
+                            critical_ms: <span class="str">10000</span>
+                            queries:
+                            slow_query_ms: <span class="str">1000</span>
+                            n_plus_one_threshold: <span class="str">10</span>
+                            <span class="kw">model</span>:
+                            provider: <span class="str">"github_copilot"</span>
+                            github_model: <span class="str">"gpt-4o"</span>
+                            <span class="kw">dashboard</span>:
+                            host: <span class="str">"0.0.0.0"</span>
+                            port: <span class="str">5050</span>
+                            <span class="kw">logging</span>:
+                            level: <span class="str">"INFO"</span>
+                            file: <span class="str">"./logs/predictor.log"</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-num">11 / 12</div>
+        </div>
+        <!-- ──────────── SLIDE 12 — Summary & Next Steps ──────────── -->
+        <div class="slide" data-slide="11">
+            <div class="content" style="text-align: center;">
+                <h2>Summary & Next Steps</h2>
+                <div class="grid-3" style="margin: 30px 0;">
+                    <div class="card" style="text-align: center;">
+                        <span class="icon">🎯</span>
+                        <h3>20+ Patterns</h3>
+                        <p>Deterministic rule-based detection covering response time, SQL, JVM, concurrency, and architecture issues</p>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <span class="icon">🧠</span>
+                        <h3>AI-Augmented</h3>
+                        <p>Optional LLM layer for root-cause analysis, scaling predictions, and code-level fix suggestions</p>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <span class="icon">🚀</span>
+                        <h3>CI/CD Ready</h3>
+                        <p>JSON API for automated deployment gates — block releases when risk score exceeds threshold</p>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 14px;">Integration Options</h3>
+                    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                        <div class="card" style="padding: 14px 24px; text-align: center; min-width: 200px;">
+                            <strong style="color: #60a5fa;">Option A</strong><br>
+                            <span style="color:#94a3b8; font-size:.9rem;">Export & Analyze (manual)</span>
+                        </div>
+                        <div class="card" style="padding: 14px 24px; text-align: center; min-width: 200px;">
+                            <strong style="color: #a78bfa;">Option B</strong><br>
+                            <span style="color:#94a3b8; font-size:.9rem;">Live API Monitoring (auto)</span>
+                        </div>
+                        <div class="card" style="padding: 14px 24px; text-align: center; min-width: 200px;">
+                            <strong style="color: #f472b6;">Option C</strong><br>
+                            <span style="color:#94a3b8; font-size:.9rem;">Glowroot Alert Webhook</span>
+                        </div>
+                    </div>
+                </div>
+                <p style="margin-top: 36px; font-size: 1.4rem; font-weight: 700; background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Thank You
+                </p>
+            </div>
+            <div class="slide-num">12 / 12</div>
+        </div>
+    </div>
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- NAVIGATION                                                  -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <nav class="nav">
+        <button id="prevBtn" onclick="navigate(-1)">◀ Prev</button>
+        <span class="counter" id="counter">1 / 12</span>
+        <button id="nextBtn" onclick="navigate(1)">Next ▶</button>
+    </nav>
+    <script>
+        const slides = document.querySelectorAll('.slide');
+
+        const total = slides.length;
+
+        let current = 0;
+
+
+
+        function show(idx) {
+
+            slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+
+            document.getElementById('counter').textContent = `${idx + 1} / ${total}`;
+
+            document.getElementById('progress').style.width = `${((idx + 1) / total) * 100}%`;
+
+        }
+
+
+
+        function navigate(dir) {
+
+            current = Math.max(0, Math.min(total - 1, current + dir));
+
+            show(current);
+
+        }
+
+
+
+        // Keyboard navigation
+
+        document.addEventListener('keydown', (e) => {
+
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                navigate(1);
+            }
+
+            if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                navigate(-1);
+            }
+
+            if (e.key === 'Home') {
+                e.preventDefault();
+                current = 0;
+                show(current);
+            }
+
+            if (e.key === 'End') {
+                e.preventDefault();
+                current = total - 1;
+                show(current);
+            }
+
+        });
+
+
+
+        // Touch swipe support
+
+        let touchStartX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+
+            const diff = e.changedTouches[0].screenX - touchStartX;
+
+            if (Math.abs(diff) > 60) navigate(diff < 0 ? 1 : -1);
+
+        });
+
+
+
+        show(0);
+    </script>
+</body>
+
+</html>
