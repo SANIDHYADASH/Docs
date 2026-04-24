@@ -14,6 +14,13 @@
 	</thead>
 	<tbody>
 		<tr>
+			<td>11</td>
+			<td>SmartBook</td>
+			<td>24 April 2026</td>
+			<td><a href="/smartbook">View</a></td>
+			<td><span style="color:green;font-weight:bold;">Available</span></td>
+		</tr>
+		<tr>
 			<td>10</td>
 			<td>MTP Report - IITJ</td>
 			<td>19 April 2026</td>
