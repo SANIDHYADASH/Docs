@@ -15,7 +15,7 @@
 	<tbody>
 		<tr>
 			<td>12</td>
-			<td>Portfolio</td>
+			<td>Personal Portfolio</td>
 			<td>13 June 2026</td>
 			<td><a href="/portfolio">View</a></td>
 			<td><span style="color:green;font-weight:bold;">Available</span></td>
