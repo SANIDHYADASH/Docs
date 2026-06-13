@@ -14,6 +14,13 @@
 	</thead>
 	<tbody>
 		<tr>
+			<td>12</td>
+			<td>Portfolio</td>
+			<td>13 June 2026</td>
+			<td><a href="/portfolio">View</a></td>
+			<td><span style="color:green;font-weight:bold;">Available</span></td>
+		</tr>
+		<tr>
 			<td>11</td>
 			<td>SmartBook</td>
 			<td>24 April 2026</td>
