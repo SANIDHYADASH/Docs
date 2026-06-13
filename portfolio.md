@@ -38,7 +38,7 @@
 
 ## 🎯 Overview
 
-This is a **personal portfolio website** built to showcase my skills, experience, education, and projects as a Software Engineer. The website features a modern, clean design with smooth animations, dark/light theme support, and full responsiveness across all devices.
+This is a **personal portfolio website** built to showcase my skills, experience, education, and projects as a Software Engineer. The website features a modern, clean design with smooth animations, da[...]
 
 ### Key Highlights
 
@@ -753,10 +753,18 @@ const getDocumentation = () => {
 Used in multiple components for sequential appearance:
 
 ```typescript
-style={{ 
-  animationDelay: `${index * 100}ms`,
-  transitionDelay: `${index * 150}ms` 
-}}
+// Use raw string to prevent Jekyll template parsing
+// style={ { animationDelay: `${index * 100}ms`, transitionDelay: `${index * 150}ms` } }
+// In actual React component, template literals work correctly
+```
+
+**Correct implementation in component files** (lines 755-760 reference):
+```
+Apply template literal syntax directly in .tsx files:
+style={Object.assign({}, 
+  { animationDelay: `${index * 100}ms` },
+  { transitionDelay: `${index * 150}ms` }
+)}
 ```
 
 ### Intersection Observer Animations
@@ -785,7 +793,7 @@ useEffect(() => {
 }, []);
 
 // Apply based on isVisible state
-className={`${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+className={`${ isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
 ```
 
 ---
