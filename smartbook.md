@@ -47,6 +47,10 @@
 15. [Key Features Summary](#15-key-features-summary)
 16. [Testing](#16-testing)
 17. [Scripts Reference](#17-scripts-reference)
+18. [Module Reference (Documents, Restaurant, POS, Loyalty, Store)](#18-module-reference)
+19. [End-to-End Application Flow](#19-end-to-end-application-flow)
+20. [REST API (v1)](#20-rest-api-v1)
+21. [Related Documentation](#21-related-documentation)
 
 ---
 
@@ -56,6 +60,7 @@
 
 - **Invoicing** — Create sale, purchase, sale-return (credit note), and purchase-return (debit note) invoices with automatic GST calculations (CGST/SGST/IGST)
 - **Payments** — Record payment-in (from customers) and payment-out (to suppliers) with automatic outstanding balance tracking
+- **Expenses** — Track business expenses with GST, vendor linking, payment tracking, recurrence, and ITC eligibility
 - **Inventory** — Track products and services with dual-unit support, stock management, and low-stock alerts
 - **Party Management** — Customer and supplier directory with GSTIN validation, opening balances, and credit limits
 - **GST Reports** — GSTR-1, GSTR-2, GSTR-3B report generation and export
@@ -64,6 +69,8 @@
 - **Party Portal** — External customers/suppliers can log in to view their own invoices, payments, and shared reports
 - **Licensing** — Trial/paid/complimentary licenses with Razorpay payment integration and coupon system
 - **Backup & Restore** — Full data export/import with FK-aware ordering
+- **Multi-Currency** — Optional multi-currency support for international transactions
+- **Invoice Language & Font** — Print GST invoices in 11 Indian languages with custom font selection
 
 ### Business Context
 
@@ -132,7 +139,8 @@
 │                    Supabase Platform                     │
 │  ┌──────────────┐ ┌──────────────┐ ┌──────────────────┐  │
 │  │  PostgreSQL  │ │ Auth (GoTrue)│ │  Edge Functions  │  │
-│  │  19 tables   │ │  JWT + OAuth │ │  6 functions     │  │
+│  │  PostgreSQL  │ │ Auth (GoTrue)│ │  Edge Functions  │  │
+│  │  21 tables   │ │  JWT + OAuth │ │  6 functions     │  │
 │  │  22+ RLS     │ │              │ │  - create-user   │  │
 │  │  policies    │ │              │ │  - manage-user   │  │
 │  │  16 functions│ │              │ │  - lookup-email  │  │
@@ -192,7 +200,9 @@ remix-of-lighting-fast-main/
 │   │   ├── AppContext.tsx              # Central data store (CRUD for all entities)
 │   │   ├── AuthContext.tsx             # Authentication state
 │   │   ├── CompanyContext.tsx          # Multi-company & permissions
-│   │   └── LicenseContext.tsx          # License/subscription state
+│   │   ├── ExpenseContext.tsx          # Expense CRUD (DB-backed, per-company)
+│   │   ├── LicenseContext.tsx          # License/subscription state
+│   │   └── ThemeContext.tsx            # Dark/light theme
 │   ├── hooks/
 │   │   ├── use-mobile.tsx             # Responsive breakpoint (< 768px)
 │   │   ├── use-persisted-columns.ts   # Column visibility persistence
@@ -213,6 +223,7 @@ remix-of-lighting-fast-main/
 │   │   ├── CreateInvoice.tsx          # Invoice creation (sale/purchase/returns)
 │   │   ├── Dashboard.tsx              # Business overview with stats
 │   │   ├── EditInvoice.tsx            # Edit existing invoice
+│   │   ├── Expenses.tsx               # Expense tracking & management
 │   │   ├── Index.tsx                  # Root redirect
 │   │   ├── ItemHistory.tsx            # Per-item transaction history
 │   │   ├── Items.tsx                  # Product/service inventory management
@@ -226,7 +237,7 @@ remix-of-lighting-fast-main/
 │   │   ├── PaymentOut.tsx             # Payment made to suppliers
 │   │   ├── PurchaseReturn.tsx         # Purchase return (debit notes)
 │   │   ├── Purchases.tsx              # Purchase invoice list
-│   │   ├── Reports.tsx                # 14 report types with export
+│   │   ├── Reports.tsx                # 19 report types with export (inc. Invoice Wise P&L, Expense Report)
 │   │   ├── SaleReturn.tsx             # Sale return (credit notes)
 │   │   ├── Sales.tsx                  # Sales invoice list
 │   │   └── SettingsPage.tsx           # Business profile configuration
@@ -237,7 +248,10 @@ remix-of-lighting-fast-main/
 │   │   └── index.ts                   # TypeScript type definitions
 │   └── utils/
 │       ├── activityLog.ts             # Audit trail logging
+│       ├── currency.ts               # Multi-currency support & FX rates
+│       ├── expenseReports.ts         # Expense report PDF/Excel export + ITC summary
 │       ├── gstExport.ts              # GSTR-1/2/3B Excel export
+│       ├── i18n.ts                   # 11-language translation dictionary
 │       ├── importExport.ts           # Bulk import/export (Excel/CSV)
 │       ├── invoiceCalc.ts            # Invoice calculation engine
 │       ├── invoicePdf.ts             # Invoice HTML/PDF generation
@@ -344,7 +358,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIs...
 ```
 ┌─────────────┐     ┌──────────────┐     ┌────────────────┐
 │  Landing    │     │  Auth Page   │     │   Supabase     │
-│  Page (/)   │───▶│  (/auth)     │     │   Auth         │
+│  Page (/)   │───▶ │  (/auth)     │     │   Auth         │
 └─────────────┘     └──────┬───────┘     └───────┬────────┘
                            │                     │
               ┌────────────┼────────────┐        │
@@ -733,9 +747,9 @@ GSTR Export Details:
 │  ┌─── Export (.bkp) ───────────────────────────────┐   │
 │  │  1. Fetch all company data from Supabase:       │   │
 │  │     parties, items, invoices, invoice_items,    │   │
-│  │     payments, business_profiles, custom_units,  │   │
-│  │     categories, activity_log, shared_reports,   │   │
-│  │     party_access                                │   │
+│  │     payments, expenses, expense_payments,       │   │
+│  │     business_profiles, custom_units, categories,│   │
+│  │     activity_log, shared_reports, party_access  │   │
 │  │  2. Serialize to JSON                           │   │
 │  │  3. Download as .bkp file                       │   │
 │  └─────────────────────────────────────────────────┘   │
@@ -744,14 +758,15 @@ GSTR Export Details:
 │  │  1. Parse .bkp JSON file                        │   │
 │  │  2. Purge existing data (FK-safe order):        │   │
 │  │     a. NULL linked_invoice_id on invoices       │   │
-│  │     b. Delete: payments → invoice_items →       │   │
-│  │        invoices → party_access → items →        │   │
-│  │        parties → activity_log →                 │   │
-│  │        shared_reports → custom_units →          │   │
-│  │        categories → business_profiles           │   │
+│  │     b. Delete: expense_payments → payments →    │   │
+│  │        invoice_items → invoices → party_access  │   │
+│  │        → expenses → items → parties →           │   │
+│  │        activity_log → shared_reports →          │   │
+│  │        custom_units → categories →              │   │
+│  │        business_profiles                        │   │
 │  │  3. Upsert in batches of 500:                   │   │
 │  │     Reverse order (business_profiles first,     │   │
-│  │     then parties, items, invoices, etc.)        │   │
+│  │     parties, items, expenses, invoices, etc.).  │   │
 │  │  4. Verify record counts                        │   │
 │  └─────────────────────────────────────────────────┘   │
 │                                                        │
@@ -796,24 +811,24 @@ GSTR Export Details:
 │  │  ┌──────────┬──────┬────────┬──────┬─────────┐    │    │
 │  │  │ Page     │ View │ Create │ Edit │ Delete  │    │    │
 │  │  ├──────────┼──────┼────────┼──────┼─────────┤    │    │
-│  │  │ Dashboard│  ✓   │   -    │  -   │   -     │   │    │
-│  │  │ Sales    │  ✓   │   ✓    │  ✓  │   ✗    │    │    │
-│  │  │ Items    │  ✓   │   ✓    │  ✗  │   ✗    │    │    │
+│  │  │ Dashboard│  ✓   │   -    │  -   │   -     │    │    │
+│  │  │ Sales    │  ✓   │   ✓    │  ✓   │   ✗     │    │    │
+│  │  │ Items    │  ✓   │   ✓    │  ✗   │   ✗     │    │    │
 │  │  │ ...      │      │        │      │         │    │    │
 │  │  └──────────┴──────┴────────┴──────┴─────────┘    │    │
 │  └───────────────────────────────────────────────────┘    │
-│                                                          │
-│  ┌─── Activity Log Tab ─────────────────────────────┐    │
-│  │ [2026-04-24 10:30] Alice created Invoice INV-042 │    │
-│  │ [2026-04-24 09:15] Bob edited Party "XYZ Corp"   │    │
-│  │ [2026-04-23 18:00] Carol deleted Payment PAY-007 │    │
-│  └──────────────────────────────────────────────────┘    │
-│                                                          │
-│  ┌─── Settings Tab ─────────────────────────────────┐    │
-│  │ Allow New Signups: [Toggle]                      │    │
-│  │ (Stored in app_settings.allow_signups)           │    │
-│  └──────────────────────────────────────────────────┘    │
-└──────────────────────────────────────────────────────────┘
+│                                                           │
+│  ┌─── Activity Log Tab ─────────────────────────────┐     │
+│  │ [2026-04-24 10:30] Alice created Invoice INV-042 │     │
+│  │ [2026-04-24 09:15] Bob edited Party "XYZ Corp"   │     │
+│  │ [2026-04-23 18:00] Carol deleted Payment PAY-007 │     │
+│  └──────────────────────────────────────────────────┘     │
+│                                                           │
+│  ┌─── Settings Tab ─────────────────────────────────┐     │
+│  │ Allow New Signups: [Toggle]                      │     │
+│  │ (Stored in app_settings.allow_signups)           │     │
+│  └──────────────────────────────────────────────────┘     │
+└───────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -856,8 +871,8 @@ GSTR Export Details:
               │                │               │
               │                │               │
               ▼                ▼               │
-       ┌──────────────┐ ┌──────────────┐      │
-       │ party_access │ │  invoices    │◄─────┘
+       ┌──────────────┐ ┌──────────────┐       │
+       │ party_access │ │  invoices    │◄──────┘
        │(portal perms)│ │  (sale/      │  linked
        └──────────────┘ │   purchase/  │
                         │   returns)   │
@@ -869,15 +884,21 @@ GSTR Export Details:
                         │(line items)  │
                         └──────────────┘
 
-     ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-     │ custom_units │  │  categories  │  │ activity_log │
-     │ (per company)│  │(per company) │  │ (audit trail)│
-     └──────────────┘  └──────────────┘  └──────────────┘
+      ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+      │ custom_units │  │  categories  │  │ activity_log │
+      │ (per company)│  │(per company) │  │ (audit trail)│
+      └──────────────┘  └──────────────┘  └──────────────┘
 
-     ┌──────────────┐
-     │shared_reports│
-     │(sender→recip)│
-     └──────────────┘
+      ┌──────────────┐  ┌────────────────┐
+      │   expenses   │  │expense_payments│
+      │(per company) │  │(per company)   │
+      └──────┬───────┘  └────────────────┘
+             │
+             ▼
+      ┌──────────────┐
+      │shared_reports│
+      │(sender→recip)│
+      └──────────────┘
 
      ┌──────────────┐  ┌──────────────────┐  ┌──────────────────┐
      │   licenses   │  │subscription_     │  │coupon_redemptions│
@@ -988,6 +1009,10 @@ Business configuration per company.
 | `whatsapp_auto_share_purchases` | `boolean` | NOT NULL, DEFAULT `false` |
 | `whatsapp_auto_share_payments` | `boolean` | NOT NULL, DEFAULT `false` |
 | `whatsapp_auto_share_outstanding` | `boolean` | NOT NULL, DEFAULT `false` |
+| `invoice_font_family` | `text` | NOT NULL, DEFAULT `''` |
+| `invoice_language` | `text` | NOT NULL, DEFAULT `'en'` |
+| `multi_currency_enabled` | `boolean` | NOT NULL, DEFAULT `false` |
+| `base_currency` | `text` | NOT NULL, DEFAULT `'INR'` |
 | `created_at` | `timestamptz` | NOT NULL, DEFAULT `now()` |
 | `updated_at` | `timestamptz` | NOT NULL, DEFAULT `now()` |
 
@@ -1218,6 +1243,48 @@ Reports shared between users via the portal.
 | `viewed_at` | `timestamptz` | |
 | `downloaded_at` | `timestamptz` | |
 
+#### `expenses`
+Business expenses with GST, vendor linking, payment tracking, and recurrence.
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| `id` | `uuid` | PK, `gen_random_uuid()` |
+| `company_id` | `uuid` | NOT NULL, FK → `companies(id)` CASCADE |
+| `user_id` | `uuid` | NOT NULL, FK → `auth.users(id)` CASCADE |
+| `date` | `date` | NOT NULL, DEFAULT `CURRENT_DATE` |
+| `category` | `text` | NOT NULL, DEFAULT `'Miscellaneous'` |
+| `vendor_id` | `uuid` | FK → `parties(id)` SET NULL |
+| `vendor_name` | `text` | |
+| `description` | `text` | NOT NULL, DEFAULT `''` |
+| `amount` | `numeric(14,2)` | NOT NULL, DEFAULT `0` |
+| `gst_rate` | `numeric(5,2)` | NOT NULL, DEFAULT `0` |
+| `gst_amount` | `numeric(14,2)` | NOT NULL, DEFAULT `0` |
+| `is_inter_state` | `boolean` | NOT NULL, DEFAULT `false` |
+| `total` | `numeric(14,2)` | NOT NULL, DEFAULT `0` |
+| `itc_eligible` | `boolean` | NOT NULL, DEFAULT `true` |
+| `payment_status` | `text` | NOT NULL, DEFAULT `'unpaid'` (`paid`\|`unpaid`\|`partial`) |
+| `attachment_data_url` | `text` | |
+| `notes` | `text` | |
+| `recurrence` | `text` | NOT NULL, DEFAULT `'none'` (`none`\|`daily`\|`weekly`\|`monthly`\|`quarterly`\|`yearly`) |
+| `next_due_date` | `date` | |
+| `recurring_parent_id` | `uuid` | FK → `expenses(id)` SET NULL |
+| `created_at` | `timestamptz` | NOT NULL, DEFAULT `now()` |
+| `updated_at` | `timestamptz` | NOT NULL, DEFAULT `now()` |
+
+#### `expense_payments`
+Payments made against an expense.
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| `id` | `uuid` | PK, `gen_random_uuid()` |
+| `expense_id` | `uuid` | NOT NULL, FK → `expenses(id)` CASCADE |
+| `company_id` | `uuid` | NOT NULL, FK → `companies(id)` CASCADE |
+| `date` | `date` | NOT NULL, DEFAULT `CURRENT_DATE` |
+| `amount` | `numeric(14,2)` | NOT NULL, DEFAULT `0` |
+| `mode` | `text` | NOT NULL, DEFAULT `'cash'` (`cash`\|`bank`\|`upi`\|`cheque`\|`card`) |
+| `notes` | `text` | |
+| `created_at` | `timestamptz` | NOT NULL, DEFAULT `now()` |
+
 #### `page_permissions` (Legacy)
 Per-user page-level access control. Superseded by `company_members.page_permissions` JSON.
 
@@ -1405,6 +1472,7 @@ Granted `SELECT` to `authenticated` role.
 | `update_items_updated_at` | `items` | BEFORE UPDATE | `update_updated_at_column()` |
 | `update_invoices_updated_at` | `invoices` | BEFORE UPDATE | `update_updated_at_column()` |
 | `update_payments_updated_at` | `payments` | BEFORE UPDATE | `update_updated_at_column()` |
+| `update_expenses_updated_at` | `expenses` | BEFORE UPDATE | `update_updated_at_column()` |
 | `update_companies_updated_at` | `companies` | BEFORE UPDATE | `update_updated_at_column()` |
 | `update_company_members_updated_at` | `company_members` | BEFORE UPDATE | `update_updated_at_column()` |
 | `trg_create_trial_license` | `companies` | AFTER INSERT | `create_trial_license()` |
@@ -1445,12 +1513,17 @@ Granted `SELECT` to `authenticated` role.
 | `idx_coupons_code` | coupons | `lower(code)` |
 | `idx_subscription_payments_user` | subscription_payments | `user_id` |
 | `idx_subscription_payments_order` | subscription_payments | `razorpay_order_id` |
+| `expenses_company_id_idx` | expenses | `company_id` |
+| `expenses_date_idx` | expenses | `date` |
+| `expenses_vendor_id_idx` | expenses | `vendor_id` |
+| `expense_payments_expense_id_idx` | expense_payments | `expense_id` |
+| `expense_payments_company_id_idx` | expense_payments | `company_id` |
 
 ### 8.8 Row-Level Security (RLS) Policies
 
 All tables have RLS enabled. Policies use `SECURITY DEFINER` helper functions for role checks.
 
-#### Core Business Tables (parties, items, invoices, invoice_items, payments, custom_units, categories)
+#### Core Business Tables (parties, items, invoices, invoice_items, payments, expenses, expense_payments, custom_units, categories)
 
 | Operation | Who | Logic |
 |-----------|-----|-------|
@@ -1522,6 +1595,7 @@ All tables have RLS enabled. Policies use `SECURITY DEFINER` helper functions fo
 | 020 | — | License extension | `extend_or_create_paid_license()`, rewritten `redeem_license()` |
 | 021 | — | Unique key fix | Clears `license_key` before extending to avoid constraint violation |
 | 022 | — | Key/email propagate | Updated extension function to prefer newest key/email |
+| 023 | — | Expenses + profile settings | `expenses` + `expense_payments` tables; `invoice_font_family`, `invoice_language`, `multi_currency_enabled`, `base_currency` on `business_profiles` |
 
 ---
 
@@ -1538,9 +1612,11 @@ All tables have RLS enabled. Policies use `SECURITY DEFINER` helper functions fo
           <LicenseProvider>    ← License state, super admin check
             <AppRoutes />      ← Route definitions + guards
               <AppProvider>    ← All business data CRUD (scoped to active company)
-                <AppLayout>    ← Sidebar, header, content area
-                  {page}
-                </AppLayout>
+                <ExpenseProvider> ← Expense CRUD (DB-backed, per-company)
+                  <AppLayout>    ← Sidebar, header, content area
+                    {page}
+                  </AppLayout>
+                </ExpenseProvider>
               </AppProvider>
           </LicenseProvider>
         </CompanyProvider>
@@ -1582,6 +1658,7 @@ All tables have RLS enabled. Policies use `SECURITY DEFINER` helper functions fo
 | `/sale-return` | SaleReturn | `sale_return` |
 | `/purchase-return` | PurchaseReturn | `purchase_return` |
 | `/reports` | Reports | `reports` |
+| `/expenses` | Expenses | `expenses` |
 | `/settings` | SettingsPage | `settings` |
 | `/backup` | BackupRestore | `settings` |
 | `/admin` | AdminPanel | (unrestricted for logged-in) |
@@ -1606,10 +1683,11 @@ All tables have RLS enabled. Policies use `SECURITY DEFINER` helper functions fo
 | **PaymentOut** | Supplier payment recording | Same as PaymentIn for outgoing payments |
 | **SaleReturn** | Credit note list | Create/list/preview sale returns |
 | **PurchaseReturn** | Debit note list | Create/list/preview purchase returns |
-| **Reports** | 14 report types | PDF/Excel export, share to portal, GSTR-1/2/3B |
+| **Reports** | 15 report types | PDF/Excel export, share to portal, GSTR-1/2/3B, Expense Report |
+| **Expenses** | Expense tracking | Category-wise expenses, GST/ITC, vendor linking, payment tracking, recurrence |
 | **PartyLedger** | Per-party ledger | Running balance, debit/credit entries, export |
 | **ItemHistory** | Per-item transactions | Stock movements, sale/purchase totals, export |
-| **SettingsPage** | Business configuration | Logo, GSTIN, state, invoice template, UPI ID |
+| **SettingsPage** | Business configuration | Logo, GSTIN, state, invoice template, UPI ID, invoice language, invoice font, multi-currency |
 | **AdminPanel** | Team management | Member CRUD, roles, page permissions, activity log, app settings |
 | **Billing** | License management | Plans, Razorpay payment, coupon apply, key redemption |
 | **LicensesAdmin** | Super admin licenses | Generate keys, manage licenses, coupons admin, payment toggle |
@@ -1664,9 +1742,9 @@ All tables have RLS enabled. Policies use `SECURITY DEFINER` helper functions fo
 | **invoicePdf.ts** | Invoice PDF generation | Thermal 58mm/80mm, A5 (single/2-page), A4 formats; UPI QR codes; amount in words (Lakh/Crore) |
 | **paymentPdf.ts** | Payment receipt generation | Thermal/A5/A4 receipt and voucher formats |
 | **razorpay.ts** | Payment SDK | `loadRazorpay()`, `openRazorpay()` — lazy-loads Razorpay script and opens checkout modal |
-| **reportArtifacts.ts** | Shareable report artifacts | `buildReportArtifact()` — generates HTML + XLSX base64 for all 14 report types |
-| **reportExport.ts** | Direct report export | 28 export functions (PDF + Excel for each report type) |
-| **reportGenerators.ts** | Report data computation | Pure functions: `getSaleReportData()`, `getProfitLossData()`, `getStockSummaryData()`, etc. |
+| **reportArtifacts.ts** | Shareable report artifacts | `buildReportArtifact()` — generates HTML + XLSX base64 for all 15 report types |
+| **reportExport.ts** | Direct report export | 30 export functions (PDF + Excel for each report type) |
+| **reportGenerators.ts** | Report data computation | Pure functions: `getSaleReportData()`, `getProfitLossData()`, `getStockSummaryData()`, `getExpenseReportData()`, etc. |
 
 ---
 
@@ -1680,6 +1758,13 @@ All tables have RLS enabled. Policies use `SECURITY DEFINER` helper functions fo
 | **razorpay-create-order** | POST | JWT | Create Razorpay order for monthly (₹199) or lifetime (₹9,999) plan. Applies coupon discount. Returns order_id + key_id |
 | **razorpay-verify-payment** | POST | JWT | Verify HMAC-SHA256 signature. Issue license via `extend_or_create_paid_license`. Record coupon redemption |
 | **razorpay-webhook** | POST | Razorpay signature | Async payment event handler. Handles `payment.captured`, `payment.failed`, `refund.processed`. Uses `timingSafeEqual` |
+| **send-password-reset** | POST | None (public) | Sends a password-reset link for an email/phone account |
+| **loyalty-card-lookup** | POST | None (public) | Customer-facing card portal lookup by phone + card number |
+| **generate-item-image** | POST | JWT | AI product-image generation for an item |
+| **parse-invoice-file** | POST | JWT | AI invoice/bill OCR. Accepts base64 PDF or image, returns structured invoice JSON (party, dates, line items, discounts, GST, totals). Tries providers from `ai_providers` by priority, then `GEMINI_API_KEY`, then the Lovable AI gateway. The file is never persisted |
+
+| **super-admin** | POST | JWT (super admin) | Cross-tenant console actions: businesses, users, licences, storage/DB stats |
+| **api** | GET/POST/PATCH/DELETE | JWT (manual) | Public REST API v1 over every business resource + report endpoints. See [docs/API.md](docs/API.md) |
 
 ### Edge Function Security Notes
 
@@ -1839,7 +1924,10 @@ Pages: `dashboard`, `parties`, `items`, `sales`, `purchases`, `payment_in`, `pay
 - [x] B2B, B2CL, B2CS, CDNR, HSN summary sheets
 
 ### Invoice Features
-- [x] 5 invoice formats: A4, A5, A5 2-page, Thermal 58mm, Thermal 80mm
+- [x] 7 invoice formats: A4, A5, A5 2-page, Thermal 58mm, Thermal 80mm, A4 GST, A5 GST
+- [x] GST invoice templates with HSN summary and GST rate aggregation
+- [x] Invoice language selection (11 Indian languages) — applies to GST templates
+- [x] Invoice font family selection (per-company, stored in DB)
 - [x] Extra charges (TCS, Freight, Packing) and extra discounts (Trade, Loyalty)
 - [x] Pre-tax and post-tax charge/discount application
 - [x] Auto round-off with manual override
@@ -1848,11 +1936,31 @@ Pages: `dashboard`, `parties`, `items`, `sales`, `purchases`, `payment_in`, `pay
 - [x] Reverse calculations (edit amount → solve rate, edit GST ₹ → solve GST rate)
 - [x] Multi-tab simultaneous invoice creation
 
+### AI Invoice Upload & Parsing
+- [x] Upload a sale invoice or purchase bill as PDF / JPG / PNG (max 8MB) via `InvoiceUploadDialog` (drag-and-drop or file picker), from Sales → Import and Purchases → Import
+- [x] File is read client-side as base64 and streamed to the `parse-invoice-file` edge function — **never uploaded to Storage or stored in the DB**
+- [x] Structured extraction via tool/function calling: invoice number, date, party (name, GSTIN, state, phone, email, address), notes, line items (name, HSN, unit, qty, MRP, rate, discount + type, GST %/₹, line total), subtotal, CGST/SGST/IGST, round-off, total, amount paid
+- [x] No review popup — extracted JSON is stashed in `sessionStorage` (`sb:invoice-prefill`) and `CreateInvoice` opens prefilled at `/sales/new?type=sale|purchase&prefill=1`
+- [x] Party and item names are fuzzy-matched to existing records; GST/IGST recalculated by the normal invoice calc so totals stay consistent
+- [x] Everything remains editable before save; nothing is written until the user saves the invoice
+- [x] Multi-provider fallback chain, tried in priority order: `ai_providers` rows (Gemini, OpenAI, Anthropic, OpenRouter, any OpenAI-compatible endpoint) → `GEMINI_API_KEY` secret → Lovable AI gateway (`LOVABLE_API_KEY`)
+- [x] Falls through on 429 / 402 / 403 / 5xx and on Gemini model 404s (retries current model ids); per-provider `last_used_at` / `last_error` recorded in `ai_providers`
+- [x] Keys managed from Super Admin → AI providers (`SuperAiProviders`, backed by migration `041_ai_providers.sql`, service-role-only table + super-admin RPCs)
+
+
+
 ### Voice Input
 - [x] Web Speech API integration (Chrome/Edge)
 - [x] Fuzzy item name matching (exact → endsWith → contains → word match)
 - [x] Multi-item voice commands ("5 kg rice and 2 cement")
 - [x] Quantity + unit recognition ("5 kg", "dozen", etc.)
+
+### Expenses
+- [x] Category-wise expense tracking with GST
+- [x] Vendor linking and payment status tracking
+- [x] Recurring expenses (daily/weekly/monthly/quarterly/yearly)
+- [x] ITC eligibility flag for GST credit claims
+- [x] Expense report with category breakdown and ITC summary
 
 ### Inventory
 - [x] Products and services with categories
@@ -1864,17 +1972,22 @@ Pages: `dashboard`, `parties`, `items`, `sales`, `purchases`, `payment_in`, `pay
 - [x] Item images
 
 ### Import/Export
-- [x] Excel and CSV import/export for parties, items, invoices, payments
+- [x] Excel and CSV import/export for parties, items, invoices, payments, expenses
 - [x] Template downloads for imports
 - [x] Import validation with error reporting
 - [x] Full company data backup (.bkp JSON format)
-- [x] FK-aware restore with batch upserts (500 per batch)
+- [x] FK-aware restore with batch upserts (500 per batch) — includes expenses + expense_payments
 
 ### Multi-Company
 - [x] Create and manage multiple companies
 - [x] Switch between companies via CompanySwitcher
 - [x] Per-company data isolation (RLS enforced)
 - [x] Company-specific business profiles
+
+### Multi-Currency
+- [x] Optional multi-currency support (disabled by default)
+- [x] 17 currencies with live FX rates from open.er-api.com
+- [x] Currency conversion with cached rates
 
 ### Team & Portal
 - [x] Invite team members with roles (owner/admin/staff/member/party)
@@ -1891,18 +2004,78 @@ Pages: `dashboard`, `parties`, `items`, `sales`, `purchases`, `payment_in`, `pay
 - [x] Super admin dashboard for license management
 - [x] Payment mode toggle (enable/disable online payments)
 
-### Reports (14 Types)
-- [x] Sale Report, Purchase Report
-- [x] Day Book, All Transactions
-- [x] Profit & Loss, Party-wise P&L, Item-wise P&L
-- [x] Party Statement, All Parties Report
-- [x] Stock Summary, Stock Detail
-- [x] GSTR-1, GSTR-2, GSTR-3B
-- [x] PDF and Excel export for all reports
-- [x] Share reports to party portal users
+### Reports (18 Types)
+- [x] 1. Sale Report, 2. Purchase Report
+- [x] 3. Day Book, 5. All Transactions
+- [x] 4. Profit & Loss, 7. Party-wise P&L, 10. Item-wise P&L
+- [x] 6. Party Statement, 8. All Parties Report
+- [x] 9. Stock Summary, 11. Stock Detail
+- [x] 12. Item Sale & Purchase Detail, 13. Party Sale & Purchase Detail
+- [x] 14. Party Payment Report
+- [x] 15. GSTR-1, 16. GSTR-2, 17. GSTR-3B, 18. GSTR-9 (annual)
+- [x] Expense Report (with category breakdown & ITC summary)
+- [x] In-app **View** dialog and PDF/Excel export share one HTML builder — the statutory GST
+      layouts (`gstr1Html` / `gstr2Html` / `gstr3bHtml` / `gstr9Html` in `src/utils/gstReturns.ts`)
+      are used by both paths via `standaloneHtml` in `src/utils/reportArtifacts.ts`
+- [x] PDF, Excel, print and WhatsApp share for all reports
+- [x] Share reports to team members and party portal users
+
+### Documents & Recurring (module)
+- [x] Estimates / quotations, sale orders, purchase orders, delivery challans (`documents` table)
+- [x] Shared spreadsheet-style line grid (`src/components/DocumentItemsTable.tsx`) identical to
+      the invoice panel: inline item search, item picker, quick-add item, drag reorder,
+      HSN/qty/unit/MRP/rate/disc %/disc ₹/GST %/GST ₹/amount columns with reverse-calc
+- [x] Convert any document into an invoice (carrying lines, charges and custom fields)
+- [x] Recurring invoice schedules (daily/weekly/monthly/quarterly/yearly) with next-run tracking
+
+### Point of Sale
+- [x] Touch POS screen with item tiles/images, category quick filters and keypad
+- [x] Default walk-in party, default tender mode, mark-paid and auto-print settings
+- [x] Thermal 58/80 mm receipt printing; POS sales flagged with `pos_sale` + `payment_mode`
+- [x] Billing zoom control and barcode scanner dialog
+
+### Restaurant Module
+- [x] Areas and tables with live status (free / running / billed) — `restaurant_areas`, `restaurant_tables`
+- [x] KOT creation and Kitchen Display Screen — `kots`
+- [x] Table reservations with guest, time and cover count — `reservations`
+- [x] Table-to-invoice conversion and restaurant settings panel
+
+### Loyalty & Rewards
+- [x] Points earn/redeem rules, tiers and per-party overrides (`loyalty_transactions`)
+- [x] Redemption applied as an invoice discount with balance printed on the bill
+- [x] Printable loyalty cards with barcodes and a public `/cards` portal (edge function lookup)
+
+### Online Store
+- [x] Publishable catalogue and storefront (`store_settings`, `store_items`)
+- [x] Online orders and customers (`store_orders`, `store_order_items`, `store_customers`)
+- [x] Order → invoice conversion, storefront branding/customisation
+
+### E-Way Bill & Compliance Extras
+- [x] Per-invoice transport block (transporter, vehicle, distance, doc details) with print toggle
+- [x] Business-level e-way defaults and an auto-open amount threshold
+
+### Barcodes & Labels
+- [x] Item barcodes, camera/USB scanning into invoices and POS
+- [x] Bulk barcode/price label printing dialog with sheet layout options
+
+### Custom Fields & Industry Packs
+- [x] User-defined custom fields scoped to business / party / item / invoice / line
+- [x] Industry packs: pharma, manufacturing, garment, jewellery
+- [x] Custom fields printable as invoice columns
+
+### WhatsApp & Sharing
+- [x] Editable WhatsApp message templates for invoices, receipts and statements
+- [x] Share dialogs for invoices, payments and reports; sender number in settings
+
+### Alerts & Stock Corrections
+- [x] Alerts bell: low stock, overdue party payments, licence expiry
+- [x] Manual stock adjustments with reason and note (`stock_adjustments`)
+
+### Super Admin Console
+- [x] Separate `super.html` entry with businesses, users, licences and DB/storage usage views
+- [x] Backed by `sa_*` RPCs and the `super-admin` edge function
 
 ---
-
 ## 16. Testing
 
 ### Unit Tests (Vitest)
@@ -1939,6 +2112,162 @@ npx playwright test
 | `lint` | `eslint .` | Run ESLint |
 | `test` | `vitest run` | Run unit tests once |
 | `test:watch` | `vitest` | Run unit tests in watch mode |
+
+---
+
+
+## 18. Module Reference
+
+| Module | Pages | Contexts | Key tables |
+|--------|-------|----------|------------|
+| Core billing | `Sales`, `Purchases`, `CreateInvoice`, `EditInvoice`, `SaleReturn`, `PurchaseReturn` | `AppContext` | `invoices`, `invoice_items` |
+| Parties & items | `Parties`, `Items`, `PartyLedger`, `ItemHistory` | `AppContext`, `FieldsContext` | `parties`, `items`, `categories`, `custom_units`, `stock_adjustments` |
+| Money | `PaymentIn`, `PaymentOut`, `Expenses` | `AppContext`, `ExpenseContext` | `payments`, `expenses`, `expense_payments` |
+| Documents | `DocumentsPage`, `DocumentEditor`, `RecurringInvoices`, `RecurringEditor` | `DocumentsContext` | `documents`, `recurring_invoices` |
+| POS | `Pos`, `PosSettings` | `AppContext` | `invoices` (`pos_sale`) |
+| Restaurant | `RestaurantTables`, `KitchenDisplay`, `Reservations` | `RestaurantContext` | `restaurant_areas`, `restaurant_tables`, `kots`, `reservations` |
+| Loyalty | `Loyalty`, `CardsPortal` | `AppContext` | `loyalty_transactions`, `parties.loyalty_config` |
+| Online store | `OnlineStore`, `StoreFront`, `MyOnlineOrders` | — | `store_settings`, `store_items`, `store_orders`, `store_order_items`, `store_customers` |
+| Reports | `Reports` | `AppContext`, `ExpenseContext` | reads all business tables, writes `shared_reports` |
+| Admin & billing | `AdminPanel`, `Billing`, `BackupRestore`, `SettingsPage`, `EwaySettings` | `CompanyContext`, `LicenseContext` | `company_members`, `licenses`, `coupons`, `subscription_payments`, `business_profiles`, `invoice_templates`, `activity_log` |
+| Super console | `src/super/*` (`super.html`) | — | `super_admins` + `sa_*` RPCs |
+
+---
+
+## 19. End-to-End Application Flow
+
+### 19.1 First run to first bill
+
+```text
+Landing (/)  ->  Sign up (/auth?signup=1)
+   |                 |- auth.users row created
+   |                 |- trigger: profiles + personal company + company_members(owner)
+   |                 |- trigger: trial license issued
+   v
+Dashboard (/)  ->  Settings: business profile, GSTIN, logo, brand colours,
+   |               invoice template + font, industry packs, custom fields,
+   |               POS / e-way / loyalty / WhatsApp / restaurant settings
+   v
+Masters      ->  Parties (customers & suppliers, opening balances, credit limits)
+   |            Items (HSN, units, prices, opening stock, barcodes, images)
+   |            (or Excel/CSV import from the Items/Parties pages)
+   v
+Transaction  ->  Sales -> New Invoice  (or POS, or Restaurant table, or Store order)
+   |               |- pick party, add lines (search / picker / barcode / voice)
+   |               |- GST auto-split by state, charges & discounts, round-off,
+   |                  loyalty redemption, e-way block, custom fields
+   |               |- Save -> invoices + invoice_items, stock decremented,
+   |                  loyalty points posted, activity_log entry
+   v
+Share        ->  Print (A4/A5/thermal/designer) | PDF | WhatsApp | Party portal
+   v
+Collect      ->  Payment In (links invoice, updates amount_paid + status)
+   v
+Analyse      ->  Dashboard tiles, Alerts bell, Reports (18) -> View / PDF / Excel / Share
+   v
+Comply       ->  GSTR-1 / 2 / 3B / 9 exports for the CA
+   v
+Protect      ->  Backup & Restore (.bkp) and continuous cloud sync
+```
+
+### 19.2 Quote-to-cash (documents path)
+
+```text
+Estimate (documents.type = estimate)
+   -> customer approves
+   -> Sale Order            (stock reserved conceptually, not deducted)
+   -> Delivery Challan      (goods dispatched)
+   -> Convert to Invoice    (invoices + invoice_items, stock deducted)
+   -> Payment In            (partial or full; status paid / partial / unpaid)
+   -> Party Statement / Outstanding report
+```
+
+### 19.3 Procure-to-pay
+
+```text
+Purchase Order (documents.type = purchase_order)
+   -> Purchase Invoice (stock incremented, ITC captured)
+   -> Payment Out
+   -> Purchase Return (debit note) if goods are rejected
+   -> GSTR-2 / GSTR-3B input tax
+```
+
+### 19.4 Restaurant service cycle
+
+```text
+Reservation (optional)  ->  Table occupied on the floor plan
+   -> Order taken on the table  ->  KOT sent to Kitchen Display
+   -> KOT marked ready / served
+   -> Table bill  ->  invoice (pos_sale = true) + thermal receipt
+   -> Payment captured, table released back to free
+```
+
+### 19.5 Retail POS cycle
+
+```text
+POS screen -> scan barcode / tap tile -> qty & discount
+   -> loyalty points redeemed (optional) -> tender mode (cash/UPI/bank/cheque)
+   -> Save = invoice + stock update + auto-print receipt
+   -> Day Book / Sale Report reflect it instantly
+```
+
+### 19.6 Online store cycle
+
+```text
+Publish items -> share storefront link -> customer places order (store_orders)
+   -> owner reviews in Online Store / My Online Orders
+   -> convert to invoice -> fulfil -> payment -> reports
+```
+
+### 19.7 Team, licence and data lifecycle
+
+```text
+Owner -> Admin Panel -> invite user (create-user edge fn, seat check)
+      -> role + per-page permissions stored on company_members
+Licence -> trial -> Billing page -> Razorpay order -> signature verified
+      -> extend_or_create_paid_license -> licences history + alerts before expiry
+Data  -> Backup & Restore (.bkp) | Excel export | REST API (section 20)
+```
+
+---
+
+## 20. REST API (v1)
+
+`supabase/functions/api` is a single-function REST gateway that exposes every business
+resource and a set of aggregate report endpoints. It exists for mobile apps,
+third-party integrations and load/performance testing.
+
+- Base URL: `https://<project-ref>.supabase.co/functions/v1/api/v1`
+- Auth: `Authorization: Bearer <supabase access token>` (validated inside the function)
+- Tenancy: optional `X-Company-Id` header; defaults to the caller's first company
+- Security: all queries run with the caller's JWT, so **RLS is enforced** and
+  `company_id` is injected automatically on writes
+- Envelope: `{ "data": ..., "meta": { count, limit, offset } }`, errors as
+  `{ "error": { message, status } }`
+
+Resource paths include `parties`, `items`, `invoices`, `invoice-items`, `payments`,
+`expenses`, `documents`, `recurring-invoices`, `stock-adjustments`,
+`loyalty-transactions`, `invoice-templates`, `business-profile`, `restaurant-areas`,
+`restaurant-tables`, `kots`, `reservations`, `store-*`, `shared-reports`, plus
+read-only `activity-log`, `members` and `licenses`.
+
+Aggregates: `/reports/summary`, `/reports/gst-summary`, `/reports/stock`,
+`/reports/outstanding`. Composite write: `POST /invoices/with-items`.
+
+Deploy with `supabase functions deploy api`. Full reference, query parameters,
+curl examples, mobile-app guidance and a k6 load-test script:
+**[docs/API.md](docs/API.md)**.
+
+---
+
+## 21. Related Documentation
+
+| Document | Audience | Contents |
+|----------|----------|----------|
+| `README.md` (this file) | Developers | Architecture, schema, flows, features, API overview |
+| [`docs/FEATURES.md`](docs/FEATURES.md) | Marketing, sales, end users | Plain-English, point-wise feature list with no technical terms |
+| [`docs/API.md`](docs/API.md) | Integrators, mobile & QA teams | REST API v1 reference, auth, examples, performance testing |
+| `supabase/manual-migrations/README.md` | Operators | Multi-tenancy migration run book |
 
 ---
 
