@@ -14,24 +14,31 @@
 	</thead>
 	<tbody>
 		<tr>
-			<td>11</td>
+			<td>15</td>
 			<td>SmartBook Features</td>
 			<td>27 August 2026</td>
 			<td><a href="/smartbook-features">View</a></td>
 			<td><span style="color:green;font-weight:bold;">Available</span></td>
 		</tr>
 		<tr>
-			<td>11</td>
+			<td>14</td>
 			<td>SmartBook API</td>
 			<td>27 August 2026</td>
 			<td><a href="/smartbook-api">View</a></td>
 			<td><span style="color:green;font-weight:bold;">Available</span></td>
 		</tr>
 		<tr>
-			<td>12</td>
+			<td>13</td>
 			<td>SmartBook</td>
 			<td>27 August 2026</td>
 			<td><a href="/smartbook">View</a></td>
+			<td><span style="color:green;font-weight:bold;">Available</span></td>
+		</tr>
+		<tr>
+			<td>12</td>
+			<td>Schema Studio</td>
+			<td>25 July 2026</td>
+			<td><a href="/schema-studio">View</a></td>
 			<td><span style="color:green;font-weight:bold;">Available</span></td>
 		</tr>
 		<tr>
