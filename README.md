@@ -7,24 +7,38 @@
 		<tr>
 			<th>SL No.</th>
 			<th>Title</th>
-			<th>Date</th>
+			<th>Last Updated</th>
 			<th>Link</th>
 			<th>Status</th>
 		</tr>
 	</thead>
 	<tbody>
 		<tr>
-			<td>12</td>
-			<td>Personal Portfolio</td>
-			<td>13 June 2026</td>
-			<td><a href="/portfolio">View</a></td>
+			<td>11</td>
+			<td>SmartBook Features</td>
+			<td>27 August 2026</td>
+			<td><a href="/smartbook-features">View</a></td>
 			<td><span style="color:green;font-weight:bold;">Available</span></td>
 		</tr>
 		<tr>
 			<td>11</td>
+			<td>SmartBook API</td>
+			<td>27 August 2026</td>
+			<td><a href="/smartbook-api">View</a></td>
+			<td><span style="color:green;font-weight:bold;">Available</span></td>
+		</tr>
+		<tr>
+			<td>12</td>
 			<td>SmartBook</td>
-			<td>24 April 2026</td>
+			<td>27 August 2026</td>
 			<td><a href="/smartbook">View</a></td>
+			<td><span style="color:green;font-weight:bold;">Available</span></td>
+		</tr>
+		<tr>
+			<td>11</td>
+			<td>Personal Portfolio</td>
+			<td>13 June 2026</td>
+			<td><a href="/portfolio">View</a></td>
 			<td><span style="color:green;font-weight:bold;">Available</span></td>
 		</tr>
 		<tr>
