@@ -2,7 +2,7 @@
 
 **Browser-Enabled Asset Messenger** is an ephemeral, browser-to-browser file sharing application. A sender selects one or more local files, opens a temporary workspace, and shares a four-character ID or QR link. Recipients use that workspace ID to request files directly from the sender's open browser.
 
-!(/beam.png)
+![BEAM Application](./beam.png)
 
 BEAM does not upload file contents to an application database or object store. The selected `File` objects remain in the sender's browser and are transmitted only when a connected recipient requests them.
 
