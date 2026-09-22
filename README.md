@@ -14,6 +14,13 @@
 	</thead>
 	<tbody>
 		<tr>
+			<td>16</td>
+			<td>BEAM - Browser-Enabled Asset Messenger</td>
+			<td>22 September 2026</td>
+			<td><a href="/beam">View</a></td>
+			<td><span style="color:green;font-weight:bold;">Available</span></td>
+		</tr>
+		<tr>
 			<td>15</td>
 			<td>SmartBook Features</td>
 			<td>27 August 2026</td>
