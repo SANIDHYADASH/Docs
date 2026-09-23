@@ -1,1 +1,7 @@
 mermaid: true
+
+defaults:
+  - scope:
+      path: "beam.md"
+    values:
+      layout: mermaid
