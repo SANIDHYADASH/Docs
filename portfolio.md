@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # 🚀 Sanidhya Dash - Portfolio Website
 
 <div align="center">

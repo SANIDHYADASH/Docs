@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Event Managament Platform
 
 A comprehensive full-stack web application for event management for artists to showcase their work, manage events, and handle ticket sales with advanced QR code verification system.

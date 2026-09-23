@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Docs
 
 <div style="overflow-x:auto;">

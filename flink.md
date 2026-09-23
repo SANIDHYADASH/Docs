@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Flink - The NextGen File and Text Sharing Platform
   
   

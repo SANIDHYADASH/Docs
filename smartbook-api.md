@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Smart Books REST API — v1
 
 A single Supabase edge function (`supabase/functions/api`) exposes every business

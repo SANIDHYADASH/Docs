@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # SplitMate v2 — Release Notes
 
 > Features and enhancements delivered in the v2 development cycle.

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Schema Studio - Technical Design Document
 
 > A fast, local-first, in-browser workbench for **Markdown**, **Avro binary data (`.avro`)**, and **Avro schemas (`.avsc`)**, with optional cloud sharing for Markdown documents.

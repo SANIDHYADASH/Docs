@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # FounderConnect
 
 FounderConnect is a web platform designed to connect startup founders with technical co-founders. It facilitates the process of finding the right technical partner by allowing founders to post their startup ideas and developers to browse and apply to these opportunities.

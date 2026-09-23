@@ -1,1 +1,9 @@
 mermaid: true
+title: Sanidhya Dash - Docs
+markdown: kramdown
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

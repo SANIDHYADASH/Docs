@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # SplitMate — Group Expense Splitting Application
 
 > A full-stack web application for splitting expenses among friends and groups. Built with React, TypeScript, Tailwind CSS, and Supabase.

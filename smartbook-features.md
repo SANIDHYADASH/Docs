@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Smart Books - Accounting, Inventory & Invoicing Platform
 
 A multi-tenant, full-featured invoicing and accounting SaaS designed for Indian businesses with GST compliance, multi-company support, role-based access, Razorpay payments, and a rich set of business reports.
