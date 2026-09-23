@@ -10,12 +10,16 @@ BEAM does not upload file contents to an application database or object store. T
 
 - Share and receive from the same homepage, with focused `/share` and `/receive` pages also available.
 - Select multiple files by browsing or drag-and-drop.
+- Add more files or folders at any point, including while the workspace is live and a transfer is in progress.
 - Four-character workspace IDs using unambiguous uppercase letters and digits.
-- QR links that open the receive page and populate the workspace ID automatically.
+- QR links that open the receive page and populate the workspace ID automatically; the address bar follows whichever code is joined.
 - Optional workspace password.
 - Configurable expiry: 5 minutes, 15 minutes, 1 hour, 8 hours, or no expiry.
-- Configurable aggregate file-download limit: 1, 5, 25, or unlimited.
-- Live connection state, connected-recipient count, activity history, progress, transfer speed, and estimated time remaining.
+- Configurable download limit counted per recipient or per transfer.
+- Pause and resume individual transfers from either side, with additional requests queued in order.
+- Automatic reconnect and retry when the peer connection drops, plus a per-file Retry button.
+- Session activity feed on both sides covering adds, discoveries, pauses, resumes, downloads, removals, and failures.
+- Live connection state, connected-recipient count, progress, transfer speed, and estimated time remaining.
 - In-browser previews for common image, video, audio, PDF, and text files.
 - Light and dark themes, persisted in the browser.
 - Clear per-file errors for unavailable workspaces, incorrect passwords, disconnections, and interrupted transfers.
@@ -52,6 +56,15 @@ The signaling service is external infrastructure, but it coordinates the connect
 - **Resumable transfers** continue from the last received byte after a dropped connection.
 - **Directory sharing** is supported through the folder picker, preserving each file's relative path.
 - **Identity verification** derives a three-word safety phrase from an ECDH key exchange that both sides can compare.
+
+### Live workspace behaviour
+
+- **Add files at any time.** The sender can add files or folders while the workspace is live and while a transfer is running, using the drop zone or the **Add files** button in the file-list header. Every change rebroadcasts the manifest to each authorized peer, with one delayed retry for a connection that is momentarily not open. Removing a file rebroadcasts too.
+- **New-file discovery.** Files that appear after the recipient connected are marked `new` in the recipient's list and recorded in its activity feed.
+- **Pause and resume.** Either side can pause a running transfer; the sender halts the chunk loop and the recipient resumes from the byte it already holds. Additional requests queue and start when the current file finishes.
+- **Automatic retry.** If the peer connection drops mid-transfer, the recipient reconnects on its own — up to three attempts with increasing delay — then re-requests the interrupted file (resuming from its partial data) along with anything that was queued behind it.
+- **Manual retry.** A failed file shows a **Retry** (or **Resume**) button. It continues over a live link, or reconnects first and then continues.
+- **Activity feed.** Both sides keep a timestamped session feed. The sender logs files added and removed, guests joining and leaving, approvals, wrong passwords, requests, resumes, pauses, completed sends, limit blocks, and failures. The recipient logs connecting and reconnecting, files the sender adds or removes, requests, pauses, resumes, completed downloads, integrity failures, and each automatic retry.
 
 ## Application flow
 
@@ -183,7 +196,7 @@ The local site is served by Vite. Open the displayed URL in two browser windows 
 
 - **No workspace with that code:** confirm the four characters, verify the sender page remains open, and ensure the workspace has not expired.
 - **Wrong password:** reconnect using the exact password selected by the sender.
-- **Connection lost:** keep both devices online and retry the file; interrupted transfers do not resume.
+- **Connection lost:** the recipient reconnects and resumes automatically up to three times; if that fails, keep both devices online and press **Retry** on the file. A recipient page refresh discards partial data.
 - **No files appear:** wait for the connection to complete and verify that the sender opened the workspace after selecting files.
 - **Transfer stalls across restrictive networks:** peer connectivity depends on the available WebRTC/ICE path and signaling configuration.
 
